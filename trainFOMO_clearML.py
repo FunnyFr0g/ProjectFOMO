@@ -21,7 +21,7 @@ from clearml import Dataset as CML_Dataset
 
 task = Task.init(
     project_name='SmallObjectDetection',
-    task_name='FOMO-mva23_train_v2',
+    task_name='FOMO-mva23_train',
     tags=['FOMO'])
 
 
@@ -44,7 +44,7 @@ params = {
 "NUM_CLASSES" : 2,  # Кол-во классов (включая фон)
 "INPUT_SIZE" : (224, 224), # Размер входного изображения
 'BATCH_SIZE' : 8,
-"EPOCHS" : 10,
+"EPOCHS" : 50,
 "LR" : 1e-3,
 "trunkAt" : 4, # Номер слоя, где обрезать MobileNet. Для карты размером 56 это значение 4
 }
@@ -205,7 +205,7 @@ def main():
 
         # Логирование метрик
         task.get_logger().report_scalar(
-            title="Loss", series="Train", value=train_loss.item(), iteration=epoch
+            title="Loss", series="Train", value=train_loss, iteration=epoch
         )
 
         if epoch != 0 and epoch%10 ==0:
