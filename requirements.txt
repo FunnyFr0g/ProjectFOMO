@@ -150,8 +150,8 @@ uvicorn==0.35.0
 uvloop==0.21.0
 vincent==0.4.4
 websockets==15.0.1
-win32gui==221.6
-win32security==2.1.0
+win32gui==221.6;platform_system == "Windows"
+win32security==2.1.0;platform_system == "Windows"
 wmi==1.5.1
 wsaccel==0.6.7
 xgboost==3.0.5
