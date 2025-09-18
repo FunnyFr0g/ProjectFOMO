@@ -1,5 +1,0 @@
-Dataset,Model,AP,IoU Threshold
-skb_test,FOMO 50e,0.44845855509486465,0.01
-skb_test,FOMO 50e no_resize,0.0,0.01
-skb_test,FOMO112 50e,0.47965958875344167,0.01
-skb_test,FOMO112 10e,0.4458692373542146,0.01
