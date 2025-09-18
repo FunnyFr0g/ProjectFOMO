@@ -24,6 +24,8 @@ task = Task.init(
     task_name='FOMO-mva23_train',
     tags=['FOMO'])
 
+task.set_requirements("requirements-linux.txt")
+
 task.execute_remotely(queue_name='default', exit_process=True)
 
 coco_dataset = CML_Dataset.get(dataset_name="FOMO-mva23", dataset_project="SmallObjectDetection")
