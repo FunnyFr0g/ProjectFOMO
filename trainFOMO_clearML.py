@@ -24,7 +24,19 @@ task = Task.init(
     task_name='FOMO-mva23_train',
     tags=['FOMO'])
 
-task.get_requirements("requirements-linux.txt")
+task.set_requirements(
+    requirements_txt="""
+albumentations==2.0.8
+matplotlib==3.10.6
+numpy==2.2.6
+opencv_python_headless==4.12.0.88
+pycocotools==2.0.10
+torch==2.8.0.*
+torchvision==0.23.0.*
+tqdm==4.67.1
+clearml==2.0.2
+"""
+)
 
 task.execute_remotely(queue_name='default', exit_process=True)
 
