@@ -43,7 +43,7 @@ VAL_IMAGE_DIR = f"{dataset_path}/val/images"
 params = {
 "NUM_CLASSES" : 2,  # Кол-во классов (включая фон)
 "INPUT_SIZE" : (224, 224), # Размер входного изображения
-'BATCH_SIZE' : 32,
+'BATCH_SIZE' : 256,
 "EPOCHS" : 150,
 "LR" : 1e-3,
 "trunkAt" : 4, # Номер слоя, где обрезать MobileNet. Для карты размером 56 это значение 4
@@ -202,7 +202,7 @@ def main():
     train_dataset = CocoDataset(TRAIN_ANNOTATION_FILE, TRAIN_IMAGE_DIR, transform=transform)
     train_loader = DataLoader(train_dataset, batch_size=params["BATCH_SIZE"], shuffle=True)
 
-    val_dataset = CocoDataset(VAL_ANNOTATION_FILE, TRAIN_IMAGE_DIR, transform=transform)
+    val_dataset = CocoDataset(VAL_ANNOTATION_FILE, VAL_IMAGE_DIR, transform=transform)
     val_loader = DataLoader(val_dataset, batch_size=params["BATCH_SIZE"], shuffle=True)
 
     # Модель и оптимизатор
