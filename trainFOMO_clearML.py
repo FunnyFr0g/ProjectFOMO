@@ -216,7 +216,7 @@ def main():
     for epoch in range(1, params["EPOCHS"]+1):
         epoch_start_time = time.time()
         train_loss = train(model, train_loader, criterion, optimizer, DEVICE)
-        val_loss = validate(model, val_loader, criterion, optimizer, DEVICE)
+        val_loss = validate(model, val_loader, criterion, DEVICE)
         print(f"Epoch {epoch+1}/{params['EPOCHS']}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
 
         # Логирование метрик
