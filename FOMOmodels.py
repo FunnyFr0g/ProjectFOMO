@@ -149,7 +149,7 @@ class FomoHead56(nn.Module):
         return x
 
 class FomoModel56(nn.Module):
-    def __init__(self, num_classes):
+    def __init__(self, num_classes=2):
         super().__init__()
         self.backbone = FomoBackbone56()
         self.head = FomoHead56(num_classes)
