@@ -43,8 +43,8 @@ VAL_IMAGE_DIR = f"{dataset_path}/val/images"
 params = {
 "NUM_CLASSES" : 2,  # Кол-во классов (включая фон)
 "INPUT_SIZE" : (224, 224), # Размер входного изображения
-'BATCH_SIZE' : 8,
-"EPOCHS" : 50,
+'BATCH_SIZE' : 32,
+"EPOCHS" : 150,
 "LR" : 1e-3,
 "trunkAt" : 4, # Номер слоя, где обрезать MobileNet. Для карты размером 56 это значение 4
 }
@@ -95,7 +95,6 @@ class CocoDataset(Dataset):
         if self.transform:
             augmented = self.transform(image=image, mask=mask)
             image = augmented['image']
-            mask = augmented['mask']
 
         mask = augmented['mask']  # mask уже [H, W] = [224, 224]
 
@@ -183,6 +182,20 @@ def train(model, dataloader, criterion, optimizer, device):
     return running_loss / len(dataloader)
 
 
+def validate(model, dataloader, criterion, device):
+    model.eval()
+    running_loss = 0.0
+    with torch.no_grad():
+        for images, masks in tqdm(dataloader, desc="Validation"):
+            images = images.to(device)
+            masks = masks.to(device)
+
+            outputs = model(images)
+            loss = criterion(outputs, masks)
+            running_loss += loss.item()
+
+    return running_loss / len(dataloader)
+
 # --- 5. Основной цикл ---
 def main():
     # Загрузка данных
@@ -197,25 +210,35 @@ def main():
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=params["LR"])
 
+    best_val_loss = float("inf")
+
     # Обучение
     for epoch in range(1, params["EPOCHS"]+1):
         epoch_start_time = time.time()
         train_loss = train(model, train_loader, criterion, optimizer, DEVICE)
-        print(f"Epoch {epoch+1}/{params['EPOCHS']}, Loss: {train_loss:.4f}")
+        val_loss = validate(model, val_loader, criterion, optimizer, DEVICE)
+        print(f"Epoch {epoch+1}/{params['EPOCHS']}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
 
         # Логирование метрик
         task.get_logger().report_scalar(
             title="Loss", series="Train", value=train_loss, iteration=epoch
         )
+        task.get_logger().report_scalar(
+            title="Loss", series="Val", value=val_loss, iteration=epoch
+        )
 
+        # Сохранение весов
         if epoch != 0 and epoch%10 ==0:
-            # Сохранение весов
             torch.save(model.state_dict(), f"FOMO_56_crossEntropy_{epoch}e_model_weights.pth")
             print("Model weights saved!")
 
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            torch.save(model.state_dict(), f'BEST_FOMO_56_crossEntropy_{epoch}e_model_weights.pth')
 
 
-print("prepare DONE")
+
+
 
 if __name__ == "__main__":
     main()
