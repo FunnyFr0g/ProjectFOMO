@@ -59,7 +59,7 @@ params = {
     "EPOCHS" : 150,
     "LR" : 1e-3,
     "trunkAt" : 4, # Номер слоя, где обрезать MobileNet. Для карты размером 56 это значение 4
-    "NUM_WORKERS" : 8,
+    "NUM_WORKERS" : 4,
 
     }
 params = task.connect(params)
@@ -183,8 +183,8 @@ def train(model, dataloader, criterion, optimizer, device):
     model.train()
     running_loss = 0.0
     for images, masks in tqdm(dataloader, desc="Training"):
-        images = images.to(device)
-        masks = masks.to(device)
+        images = images.to(device, non_blocking=True)
+        masks = masks.to(device, non_blocking=True)
 
         optimizer.zero_grad()
         outputs = model(images)
