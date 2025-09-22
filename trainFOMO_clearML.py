@@ -214,10 +214,24 @@ def validate(model, dataloader, criterion, device):
 def main():
     # Загрузка данных
     train_dataset = CocoDataset(TRAIN_ANNOTATION_FILE, TRAIN_IMAGE_DIR, transform=transform)
-    train_loader = DataLoader(train_dataset, batch_size=params["BATCH_SIZE"], shuffle=True, num_workers=params['NUM_WORKERS'], pin_memory=True)
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=params["BATCH_SIZE"],
+        shuffle=True,
+        num_workers=params['NUM_WORKERS'],
+        pin_memory=True,
+        persistent_workers=False,
+        prefetch_factor=1,
+        multiprocessing_context='spawn'
+    )
 
     val_dataset = CocoDataset(VAL_ANNOTATION_FILE, VAL_IMAGE_DIR, transform=transform)
-    val_loader = DataLoader(val_dataset, batch_size=params["BATCH_SIZE"], shuffle=True, num_workers=params['NUM_WORKERS'], pin_memory=True)
+    val_loader = DataLoader(val_dataset,
+                            batch_size=params["BATCH_SIZE"],
+                            shuffle=True, num_workers=params['NUM_WORKERS'],
+                            pin_memory=True,
+                            persistent_workers=False
+                            )
 
     # Модель и оптимизатор
     model = FomoModel(params["NUM_CLASSES"]).to(DEVICE)
