@@ -48,7 +48,7 @@ VAL_IMAGE_DIR = f"{dataset_path}/val/images"
 params = {
 "NUM_CLASSES" : 2,  # Кол-во классов (включая фон)
 "INPUT_SIZE" : (224, 224), # Размер входного изображения
-'BATCH_SIZE' : 256*32,
+'BATCH_SIZE' : 512,
 "EPOCHS" : 150,
 "LR" : 1e-3,
 "trunkAt" : 4, # Номер слоя, где обрезать MobileNet. Для карты размером 56 это значение 4

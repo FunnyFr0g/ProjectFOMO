@@ -9,17 +9,19 @@ from pycocotools.coco import COCO
 from typing import Dict, List, Tuple
 from clearml import Task, Dataset
 
-task = Task.init(project_name='SmallObjectDetection', task_name='drones_only Preprocessing FOMO', tags=['FOMO'])
 
+use_clearml = True
 
-task.execute_remotely(queue_name='default', exit_process=True)
+if use_clearml:
+    task = Task.init(project_name='SmallObjectDetection', task_name='drones_only Preprocessing FOMO', tags=['FOMO'])
+    task.execute_remotely(queue_name='default', exit_process=True)
 
 params = {
     "min_bbox" : 4,
     "max_bbox" : 16,
 }
-
-params = task.connect(params)
+if use_clearml:
+    params = task.connect(params)
 
 random.seed(42)
 
@@ -227,7 +229,7 @@ class COCOBboxResizer:
             new_ann = {
                 "id": self.annotation_id,
                 "image_id": image_id,
-                "category_id": ann["category_id"]+1, ######### ВАЖНО чтоб ID шел с 1 как в coco
+                "category_id": ann["category_id"], ######### ВАЖНО чтоб ID шел с 1 как в coco
                 "bbox": [x1, y1, w, h],
                 "area": w * h,
                 "iscrowd": ann["iscrowd"],
@@ -401,7 +403,6 @@ def convert_yolo_to_coco(images_dir, labels_dir, output_file_path, class_file=No
 
 # Example usage
 if __name__ == "__main__":
-    #
     old_dataset_dir = Dataset.get(dataset_id='ae8c12c33b324947af9ae6379d920eb8').get_local_copy()
     os.makedirs("processed_dataset/train", exist_ok=True)
     
@@ -436,7 +437,7 @@ if __name__ == "__main__":
     
     
     os.makedirs("processed_dataset/val", exist_ok=True)
-    
+
     # preprocessing для val выборки
     val_image_dir = os.path.join(old_dataset_dir, "images", 'val')
     val_labels_dir = os.path.join(old_dataset_dir, "labels", 'val')
@@ -465,11 +466,13 @@ if __name__ == "__main__":
     )
     val_processor.process_dataset()
 
-    new_dataset = Dataset.create(dataset_name="drones_only_FOMO", dataset_project="SmallObjectDetection", dataset_version='1.0.0')
-    new_dataset.add_files("processed_dataset")
+    if use_clearml:
 
-    new_dataset.upload(compression=False)
-    new_dataset.finalize()
+        new_dataset = Dataset.create(dataset_name="drones_only_FOMO", dataset_project="SmallObjectDetection", dataset_version='1.0.0')
+        new_dataset.add_files("processed_dataset")
+
+        new_dataset.upload(compression=False)
+        new_dataset.finalize()
 
 
 
