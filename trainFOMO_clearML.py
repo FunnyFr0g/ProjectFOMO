@@ -30,7 +30,8 @@ task = Task.init(
 
 task.execute_remotely(queue_name='default', exit_process=True)
 
-coco_dataset = CML_Dataset.get(dataset_name="drones_only_FOMO", dataset_project="SmallObjectDetection")
+# coco_dataset = CML_Dataset.get(dataset_name="drones_only_FOMO", dataset_project="SmallObjectDetection")
+coco_dataset = CML_Dataset.get(dataset_id='45062c8b1fac490480d105ad9c945f22')
 dataset_path = coco_dataset.get_local_copy()
 
 # TRAIN_ANNOTATION_FILE = f"{dataset_path}/train/train_annotations/mva23_FOMO_train.json"
