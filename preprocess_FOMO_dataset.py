@@ -402,7 +402,7 @@ def convert_yolo_to_coco(images_dir, labels_dir, output_file_path, class_file=No
 # Example usage
 if __name__ == "__main__":
     #
-    old_dataset_dir = Dataset.get(dataset_name="FOMO-mva23").get_local_copy()
+    old_dataset_dir = Dataset.get(dataset_id='ae8c12c33b324947af9ae6379d920eb8').get_local_copy()
     os.makedirs("processed_dataset/train", exist_ok=True)
     
     # preprocessing для train выборки
