@@ -13,7 +13,7 @@ from clearml import Task, Dataset
 import zipfile
 
 
-use_clearml = True
+use_clearml = False
 
 if use_clearml:
     task = Task.init(project_name="SmallObjectDetection", task_name="PredictFOMO")
@@ -23,7 +23,7 @@ if use_clearml:
 params = {
 "NUM_CLASSES" : 2,  # Кол-во классов (включая фон)
 "INPUT_SIZE" : (224, 224), # Размер входного изображения
-"BOX_SIZE" : 8  # Размер стороны квадратного желаемого bounding box'а в пикселях
+"BOX_SIZE" : 8,  # Размер стороны квадратного желаемого bounding box'а в пикселях
 }
 if use_clearml:
     params = task.connect(params)

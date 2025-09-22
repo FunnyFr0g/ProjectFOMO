@@ -19,41 +19,49 @@ from clearml import Dataset as CML_Dataset
 
 
 
+# task = Task.init(
+#     project_name='SmallObjectDetection',
+#     task_name='FOMO-dronesOnly_train',
+#     tags=['FOMO'])
+
 task = Task.init(
     project_name='SmallObjectDetection',
-    task_name='FOMO-dronesOnly_train',
+    task_name='FOMO-mva23_train',
     tags=['FOMO'])
-
-
 
 # task.connect(params)
 
 task.execute_remotely(queue_name='default', exit_process=True)
 
+dataset_name = "FOMO-mva23" # "drones_only_FOMO"
+
 # coco_dataset = CML_Dataset.get(dataset_name="drones_only_FOMO", dataset_project="SmallObjectDetection")
-coco_dataset = CML_Dataset.get(dataset_id='45062c8b1fac490480d105ad9c945f22')
-dataset_path = coco_dataset.get_local_copy()
+# coco_dataset = CML_Dataset.get(dataset_id='45062c8b1fac490480d105ad9c945f22')
+# dataset_path = coco_dataset.get_local_copy()
 
-# TRAIN_ANNOTATION_FILE = f"{dataset_path}/train/train_annotations/mva23_FOMO_train.json"
-# TRAIN_IMAGE_DIR = f"{dataset_path}/train/images"
-# VAL_ANNOTATION_FILE = f"{dataset_path}/val/val_annotations/mva23_FOMO_val.json"
-# VAL_IMAGE_DIR = f"{dataset_path}/val/images"
-
-TRAIN_ANNOTATION_FILE = f"{dataset_path}/train/train_annotations.json"
+dataset_path = CML_Dataset.get(dataset_name=dataset_name, dataset_project="SmallObjectDetection").get_local_copy()
+TRAIN_ANNOTATION_FILE = f"{dataset_path}/train/train_annotations/mva23_FOMO_train.json"
 TRAIN_IMAGE_DIR = f"{dataset_path}/train/images"
-VAL_ANNOTATION_FILE = f"{dataset_path}/val/val_annotations.json"
+VAL_ANNOTATION_FILE = f"{dataset_path}/val/val_annotations/mva23_FOMO_val.json"
 VAL_IMAGE_DIR = f"{dataset_path}/val/images"
+
+# TRAIN_ANNOTATION_FILE = f"{dataset_path}/train/train_annotations.json"
+# TRAIN_IMAGE_DIR = f"{dataset_path}/train/images"
+# VAL_ANNOTATION_FILE = f"{dataset_path}/val/val_annotations.json"
+# VAL_IMAGE_DIR = f"{dataset_path}/val/images"
 
 # --- 1. Конфигурация ---
 
 params = {
-"NUM_CLASSES" : 2,  # Кол-во классов (включая фон)
-"INPUT_SIZE" : (224, 224), # Размер входного изображения
-'BATCH_SIZE' : 512,
-"EPOCHS" : 150,
-"LR" : 1e-3,
-"trunkAt" : 4, # Номер слоя, где обрезать MobileNet. Для карты размером 56 это значение 4
-}
+    "NUM_CLASSES" : 2,  # Кол-во классов (включая фон)
+    "INPUT_SIZE" : (224, 224), # Размер входного изображения
+    'BATCH_SIZE' : 512,
+    "EPOCHS" : 150,
+    "LR" : 1e-3,
+    "trunkAt" : 4, # Номер слоя, где обрезать MobileNet. Для карты размером 56 это значение 4
+    "NUM_WORKERS" : 8,
+
+    }
 params = task.connect(params)
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -87,7 +95,7 @@ class CocoDataset(Dataset):
 
         for ann in anns:
             if ann['category_id'] in self.cat_ids:
-                class_id = self.cat_ids.index(ann['category_id']) + 1 # 0 - фон
+                class_id = self.cat_ids.index(ann['category_id']) + 1 # 0 - фон, 1 - птиц
                 if 'segmentation' in ann:
                     # Если есть segmentation, используем его
                     mask += self.coco.annToMask(ann) * class_id
@@ -206,10 +214,10 @@ def validate(model, dataloader, criterion, device):
 def main():
     # Загрузка данных
     train_dataset = CocoDataset(TRAIN_ANNOTATION_FILE, TRAIN_IMAGE_DIR, transform=transform)
-    train_loader = DataLoader(train_dataset, batch_size=params["BATCH_SIZE"], shuffle=True)
+    train_loader = DataLoader(train_dataset, batch_size=params["BATCH_SIZE"], shuffle=True, num_workers=params['NUM_WORKERS'], pin_memory=True)
 
     val_dataset = CocoDataset(VAL_ANNOTATION_FILE, VAL_IMAGE_DIR, transform=transform)
-    val_loader = DataLoader(val_dataset, batch_size=params["BATCH_SIZE"], shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=params["BATCH_SIZE"], shuffle=True, num_workers=params['NUM_WORKERS'], pin_memory=True)
 
     # Модель и оптимизатор
     model = FomoModel(params["NUM_CLASSES"]).to(DEVICE)
@@ -235,12 +243,12 @@ def main():
 
         # Сохранение весов
         if epoch != 0 and epoch%10 ==0:
-            torch.save(model.state_dict(), f"FOMO_56_crossEntropy_dronesOnly_{epoch}e_model_weights.pth")
+            torch.save(model.state_dict(), f"FOMO_56_crossEntropy_{dataset_name}_{epoch}e_model_weights.pth")
             print("Model weights saved!")
 
         if val_loss < best_val_loss:
             best_val_loss = val_loss
-            torch.save(model.state_dict(), f'BEST_FOMO_56_crossEntropy_dronesOnly_{epoch}e_model_weights.pth')
+            torch.save(model.state_dict(), f'BEST_FOMO_56_crossEntropy_{dataset_name}_{epoch}e_model_weights.pth')
 
 
 
