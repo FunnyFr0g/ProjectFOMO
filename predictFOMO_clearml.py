@@ -13,11 +13,10 @@ from clearml import Task, Dataset
 import zipfile
 
 
-use_clearml = False
+use_clearml = True
 
 if use_clearml:
-    task = Task.init(project_name="SmallObjectDetection", task_name="PredictFOMO")
-
+    task = Task.init(project_name="SmallObjectDetection", task_name="PredictFOMO_drones_only_val")
     task.execute_remotely(queue_name='default', exit_process=True)
 
 params = {
@@ -31,6 +30,41 @@ if use_clearml:
 # Константы
 TRUNK_AT = 4
 NUM_CLASSES = 2
+
+
+
+# Чтобы подружить кириллицу с CV2 Сохраняем оригинальные функции
+_original_imread = cv2.imread
+_original_imwrite = cv2.imwrite
+
+def imread_unicode(path, flags=cv2.IMREAD_COLOR):
+    """Замена для cv2.imread с поддержкой юникода"""
+    try:
+        if os.path.exists(path):
+            with open(path, 'rb') as f:
+                data = np.frombuffer(f.read(), np.uint8)
+                return cv2.imdecode(data, flags)
+        return None
+    except:
+        # Fallback к оригинальной функции
+        return _original_imread(path, flags)
+
+def imwrite_unicode(filename, img, params=None):
+    """Замена для cv2.imwrite с поддержкой юникода"""
+    try:
+        ext = os.path.splitext(filename)[1]
+        success, encoded_img = cv2.imencode(ext, img, params)
+        if success:
+            with open(filename, 'wb') as f:
+                encoded_img.tofile(f)
+            return True
+        return False
+    except:
+        return _original_imwrite(filename, img, params)
+
+# Заменяем функции
+cv2.imread = imread_unicode
+cv2.imwrite = imwrite_unicode
 
 
 class FomoBackbone(nn.Module):
@@ -328,7 +362,7 @@ import time
 def main(model = FomoModel56(), draw_bbox=True):
     # FomoModel(num_classes=NUM_CLASSES)
     # checkpoint_path = r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\FOMO\checkpoints\checkpoint_epoch_100.pth'
-    checkpoint_path = 'weights/FOMO_56_focalloss_10e_model_weights.pth'
+    checkpoint_path = 'weights/BEST_FOMO_56_crossEntropy_dronesOnly_104e_model_weights.pth'
 
     model_name = checkpoint_path.split('/')[-1].strip('.pth')
 
@@ -336,7 +370,7 @@ def main(model = FomoModel56(), draw_bbox=True):
     model.load_state_dict(state_dict)
     model.eval()
 
-    dataset_name = "FOMO-mva23"
+    dataset_name = "drones_only_FOMO"
     coco_dataset = Dataset.get(dataset_name=dataset_name, dataset_project="SmallObjectDetection")
     dataset_path = coco_dataset.get_local_copy()
 
