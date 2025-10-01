@@ -16,6 +16,7 @@ import zipfile
 use_clearml = True
 
 if use_clearml:
+    Task.ignore_requirements('pywin32')
     task = Task.init(project_name="SmallObjectDetection", task_name="PredictFOMO_drones_only_val")
     task.execute_remotely(queue_name='default', exit_process=True)
 
