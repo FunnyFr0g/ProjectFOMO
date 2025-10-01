@@ -371,11 +371,16 @@ def main(model = FomoModel56(), draw_bbox=True):
     model.load_state_dict(state_dict)
     model.eval()
 
-    dataset_name = "drones_only_FOMO"
-    coco_dataset = Dataset.get(dataset_name=dataset_name, dataset_project="SmallObjectDetection")
-    dataset_path = coco_dataset.get_local_copy()
+    # dataset_name = "drones_only_FOMO"
+    # coco_dataset = Dataset.get(dataset_name=dataset_name, dataset_project="SmallObjectDetection")
+    # dataset_path = coco_dataset.get_local_copy()
+    # img_dir = f"{dataset_path}/val/images"
+    #
+    dataset_name = "drones_only"
+    coco_dataset = Dataset.get(dataset_name=dataset_name, dataset_project="YOLOv5", dataset_version='1.0.5')
 
-    img_dir = f"{dataset_path}/val/images"
+    dataset_path = coco_dataset.get_local_copy()
+    img_dir = f"{dataset_path}/images/val"
 
     output_dir = os.path.join('predictions', f'{dataset_name}_{model_name}')
     output_json = os.path.join(output_dir,'annotations', model_name+'_predictions.json')
