@@ -5,6 +5,39 @@ from pathlib import Path
 from clearml import Dataset, Task, StorageManager
 import cv2
 
+# Чтобы подружить кириллицу с CV2 Сохраняем оригинальные функции
+_original_imread = cv2.imread
+_original_imwrite = cv2.imwrite
+
+def imread_unicode(path, flags=cv2.IMREAD_COLOR):
+    """Замена для cv2.imread с поддержкой юникода"""
+    try:
+        if os.path.exists(path):
+            with open(path, 'rb') as f:
+                data = np.frombuffer(f.read(), np.uint8)
+                return cv2.imdecode(data, flags)
+        return None
+    except:
+        # Fallback к оригинальной функции
+        return _original_imread(path, flags)
+
+def imwrite_unicode(filename, img, params=None):
+    """Замена для cv2.imwrite с поддержкой юникода"""
+    try:
+        ext = os.path.splitext(filename)[1]
+        success, encoded_img = cv2.imencode(ext, img, params)
+        if success:
+            with open(filename, 'wb') as f:
+                encoded_img.tofile(f)
+            return True
+        return False
+    except:
+        return _original_imwrite(filename, img, params)
+
+# Заменяем функции
+cv2.imread = imread_unicode
+cv2.imwrite = imwrite_unicode
+
 
 def create_coco_structure():
     """Создает базовую структуру COCO JSON"""
@@ -52,7 +85,7 @@ def yolo_to_coco_by_split(yolo_dataset_path, output_dir):
     for class_id in sorted(list(all_classes)):
         categories.append({
             "id": class_id + 1,  # COCO начинается с 1
-            "name": f"class_{class_id}",
+            "name": f"drone",
             "supercategory": "none"
         })
 
@@ -151,7 +184,6 @@ def yolo_to_coco_by_split(yolo_dataset_path, output_dir):
             else:
                 print(f"  Изображение {image_file.name}: нет файла разметки")
 
-            image_id += 1
 
         # Сохраняем COCO JSON для текущей выборки
         output_json_path = Path(output_dir) / f"coco_annotations_{split if split else 'all'}.json"
