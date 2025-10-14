@@ -13,7 +13,7 @@ from clearml import Task, Dataset
 import zipfile
 
 
-use_clearml = True
+use_clearml = False
 
 if use_clearml:
     Task.ignore_requirements('pywin32')
@@ -371,16 +371,15 @@ def main(model = FomoModel56(), draw_bbox=True):
     model.load_state_dict(state_dict)
     model.eval()
 
-    # dataset_name = "drones_only_FOMO"
-    # coco_dataset = Dataset.get(dataset_name=dataset_name, dataset_project="SmallObjectDetection")
-    # dataset_path = coco_dataset.get_local_copy()
-    # img_dir = f"{dataset_path}/val/images"
-    #
-    dataset_name = "drones_only"
-    coco_dataset = Dataset.get(dataset_name=dataset_name, dataset_project="YOLOv5", dataset_version='1.0.5')
-
+    dataset_name = "drones_only_FOMO"
+    coco_dataset = Dataset.get(dataset_name=dataset_name, dataset_project="SmallObjectDetection")
     dataset_path = coco_dataset.get_local_copy()
-    img_dir = f"{dataset_path}/images/val"
+    img_dir = f"{dataset_path}/val/images"
+    #
+    # dataset_name = "drones_only"
+    # coco_dataset = Dataset.get(dataset_name=dataset_name, dataset_project="YOLOv5", dataset_version='1.0.5')
+    # dataset_path = coco_dataset.get_local_copy()
+    # img_dir = f"{dataset_path}/images/val"
 
     output_dir = os.path.join('predictions', f'{dataset_name}_{model_name}')
     output_json = os.path.join(output_dir,'annotations', model_name+'_predictions.json')
@@ -408,7 +407,9 @@ def main(model = FomoModel56(), draw_bbox=True):
 
         with torch.no_grad():
             output = model(image_tensor)
-            # print(f'{output.shape=}')
+            print(f'{output.shape=}')
+            print(f'{output=}')
+            int(input("ыы"))
             probs = F.softmax(output, dim=1).squeeze(0).cpu().numpy()  # [C, H, W]
             # print(f'{probs.shape=}')
             pred_mask = torch.argmax(output, dim=1).squeeze().cpu().numpy()  # [H, W]

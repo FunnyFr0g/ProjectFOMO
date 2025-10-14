@@ -7,7 +7,7 @@ from tqdm import tqdm
 from sklearn.metrics import auc as sk_auc
 from sklearn.metrics import precision_recall_curve, average_precision_score
 
-iou_threshold = 0.00001
+iou_threshold = 1e-3
 
 def calculate_iou(box1, box2):
     """Вычисляет Intersection over Union для двух bounding box'ов"""
@@ -328,18 +328,20 @@ if __name__ == "__main__":
     # predict_list = ['FOMO 50e', 'FOMO 50e no_resize', 'FOMO112 50e', 'FOMO112 10e']
 
     datasets_list = ['drones_only_FOMO_val', 'drones_only_val']
-    predict_list = ['FOMO_56_104e']
+    model_name_list = ['FOMO_56_104e']
+    # datasets_list = ['mva23_val']
+    # predict_list = ['YOLO12n 1088px']
 
 
     # predict_list = [f'{ds_name} {model_name}' for ds_name in datasets_list for model_name in model_names]
-    print(predict_list)
+    print(model_name_list)
 
     # Запускаем обработку
     results = process_all_datasets(
         gt_pathes,
         pred_pathes,
         datasets_list,
-        predict_list,
+        model_name_list,
         iou_threshold
     )
 
