@@ -173,8 +173,10 @@ def calculate_ap_per_class(gt_annotations, pred_annotations, iou_threshold=0.5):
 
 def main():
     # Загрузка данных
-    gt_file = gt_pathes['drones_only_FOMO_val']  # Замените на путь к вашему ground truth файлу
-    pred_file = pred_pathes['drones_only_FOMO_val FOMO_56_104e']  # Замените на путь к вашему predictions файлу
+    # gt_file = gt_pathes['drones_only_FOMO_val']  # Замените на путь к вашему ground truth файлу
+    # pred_file = pred_pathes['drones_only_FOMO_val FOMO_56_104e']  # Замените на путь к вашему predictions файлуданных
+    gt_file = gt_pathes['mva23_val']  # Замените на путь к вашему ground truth файлу
+    pred_file = pred_pathes['mva23_val YOLO12n 1088px']  # Замените на путь к вашему predictions файлу
 
     print("Загрузка данных...")
     gt_data = load_coco_json(gt_file)
@@ -186,7 +188,7 @@ def main():
     pred_annotations, pred_categories = organize_predictions_by_image(pred_data)
 
     # Различные IoU пороги для тестирования
-    iou_thresholds = [1e-6, 1e-5, 0.0001, 1e-3, 0.01, 0.1]
+    iou_thresholds = [0.5,] #[1e-6, 1e-5, 0.0001, 1e-3, 0.01, 0.1]
 
     results = {}
 
