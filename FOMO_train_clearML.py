@@ -46,15 +46,15 @@ dataset_name = "drones_only_FOMO" #"FOMO-mva23" #
 
 dataset = CML_Dataset.get(dataset_name=dataset_name, dataset_project="SmallObjectDetection")
 dataset_path = dataset.get_local_copy()
-TRAIN_ANNOTATION_FILE = f"{dataset_path}/train/train_annotations/mva23_FOMO_train.json"
-TRAIN_IMAGE_DIR = f"{dataset_path}/train/images"
-VAL_ANNOTATION_FILE = f"{dataset_path}/val/val_annotations/mva23_FOMO_val.json"
-VAL_IMAGE_DIR = f"{dataset_path}/val/images"
-
-# TRAIN_ANNOTATION_FILE = f"{dataset_path}/train/train_annotations.json"
+# TRAIN_ANNOTATION_FILE = f"{dataset_path}/train/train_annotations/mva23_FOMO_train.json"
 # TRAIN_IMAGE_DIR = f"{dataset_path}/train/images"
-# VAL_ANNOTATION_FILE = f"{dataset_path}/val/val_annotations.json"
+# VAL_ANNOTATION_FILE = f"{dataset_path}/val/val_annotations/mva23_FOMO_val.json"
 # VAL_IMAGE_DIR = f"{dataset_path}/val/images"
+
+TRAIN_ANNOTATION_FILE = f"{dataset_path}/train/train_annotations.json"
+TRAIN_IMAGE_DIR = f"{dataset_path}/train/images"
+VAL_ANNOTATION_FILE = f"{dataset_path}/val/val_annotations.json"
+VAL_IMAGE_DIR = f"{dataset_path}/val/images"
 
 # --- 1. Конфигурация ---
 
