@@ -264,12 +264,12 @@ def main():
 
         # Сохранение весов
         if epoch != 0 and epoch%10 ==0:
-            torch.save(model.state_dict(), f"FOMO_56_crossEntropy_{dataset_name}_{params['DATASET_VERSION']}_{epoch}e_model_weights.pth")
+            torch.save(model.state_dict(), f'FOMO_56_crossEntropy_{dataset_name}_{params["DATASET_VERSION"]}_{epoch}e_model_weights.pth')
             print("Model weights saved!")
 
         if val_loss < best_val_loss:
             best_val_loss = val_loss
-            torch.save(model.state_dict(), f'BEST_FOMO_56_crossEntropy_{dataset_name}_{params['DATASET_VERSION']}_{epoch}e_model_weights.pth')
+            torch.save(model.state_dict(), f'BEST_FOMO_56_crossEntropy_{dataset_name}_{params["DATASET_VERSION"]}_{epoch}e_model_weights.pth')
 
 
 
