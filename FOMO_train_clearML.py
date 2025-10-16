@@ -25,6 +25,7 @@ from clearml import Dataset as CML_Dataset
 #     tags=['FOMO'])
 
 Task.ignore_requirements('pywin32')
+Task.add_requirements("networkx","3.4.2")
 task = Task.init(
         project_name='SmallObjectDetection',
         task_name='FOMO_56-doF_background_train',
