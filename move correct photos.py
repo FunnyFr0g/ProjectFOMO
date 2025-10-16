@@ -57,7 +57,7 @@ def image_viewer(image_dir, confirmed_img_dir, confirmed_csv):
             if current_index >= num_images:
                 current_index = num_images - 1
             show_image()  # Показываем следующее доступное изображение
-            return
+            return num_images
 
         print(f"Отображается: {os.path.basename(image_path)}")  # Вывод имени файла
         cv2.namedWindow("Image Viewer", cv2.WINDOW_NORMAL)
@@ -105,6 +105,16 @@ def image_viewer(image_dir, confirmed_img_dir, confirmed_csv):
             current_index = (current_index + 1) % num_images
             if not show_image():
                 break
+
+        elif key == 91: # [
+            current_index = (current_index - 100) % num_images
+            if not show_image():
+                break
+        elif key == 93: #  ]
+            current_index = (current_index + 100) % num_images
+            if not show_image():
+                break
+
         elif key == 32:  # Пробел
             image_path = image_files[current_index]
             if move_and_record(image_path):
@@ -132,8 +142,8 @@ def image_viewer(image_dir, confirmed_img_dir, confirmed_csv):
 
 
 if __name__ == "__main__":
-    image_dir = r"C:\Users\Ilya\PycharmProjects\test yolo\april spores\datasets\Dataset_3b\bbox images"  # путь к папке с изображениями
-    confirmed_img_dir = r"C:\Users\Ilya\PycharmProjects\test yolo\april spores\datasets\Dataset_3b\good bbox images"  # Папка для перемещенных
+    image_dir = r"C:\Users\ILYA\Pictures\kitti\city_back"  # путь к папке с изображениями
+    confirmed_img_dir = r"C:\Users\ILYA\Pictures\kitti\bad photos"  # Папка для перемещенных
     confirmed_csv = "confirmed.csv"  # Файл для записи имен перемещенных
 
     # Создаем папку с изображениями для примера
