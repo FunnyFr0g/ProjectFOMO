@@ -24,6 +24,7 @@ from clearml import Dataset as CML_Dataset
 #     task_name='FOMO-dronesOnly_train',
 #     tags=['FOMO'])
 
+Task.ignore_requirements('pywin32')
 task = Task.init(
         project_name='SmallObjectDetection',
         task_name='FOMO_56-doF_background_train',
