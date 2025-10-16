@@ -65,7 +65,7 @@ params = {
     "EPOCHS" : 150,
     "LR" : 1e-3,
     "trunkAt" : 4, # Номер слоя, где обрезать MobileNet. Для карты размером 56 это значение 4
-    "NUM_WORKERS" : 2,
+    "NUM_WORKERS" : 0,
     "DATASET" : dataset.name,
     "DATASET_VERSION": dataset.version,
     }
