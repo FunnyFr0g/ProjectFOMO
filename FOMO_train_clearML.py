@@ -65,7 +65,7 @@ params = {
     "EPOCHS" : 150,
     "LR" : 1e-3,
     "trunkAt" : 4, # Номер слоя, где обрезать MobileNet. Для карты размером 56 это значение 4
-    "NUM_WORKERS" : 0,
+    "NUM_WORKERS" : 1,
     "DATASET" : dataset.name,
     "DATASET_VERSION": dataset.version,
     }
@@ -227,7 +227,7 @@ def main():
         shuffle=True,
         num_workers=params['NUM_WORKERS'],
         pin_memory=True,
-        persistent_workers=False,
+        persistent_workers=True,
         prefetch_factor=1,
         multiprocessing_context='spawn'
     )
