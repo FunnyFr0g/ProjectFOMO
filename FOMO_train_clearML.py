@@ -28,8 +28,10 @@ Task.ignore_requirements('pywin32')
 task = Task.init(
         project_name='SmallObjectDetection',
         task_name='FOMO_56-doF_background_train',
-        tags=['FOMO']
+        tags=['FOMO'],
+        reuse_last_task_id=True
         )
+
 
 # task.connect(params)
 
