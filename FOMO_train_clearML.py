@@ -25,21 +25,23 @@ from clearml import Dataset as CML_Dataset
 #     tags=['FOMO'])
 
 task = Task.init(
-    project_name='SmallObjectDetection',
-    task_name='FOMO-mva23_train',
-    tags=['FOMO'])
+        project_name='SmallObjectDetection',
+        task_name='FOMO_56-doF_background_train',
+        tags=['FOMO']
+        )
 
 # task.connect(params)
 
 task.execute_remotely(queue_name='default', exit_process=True)
 
-dataset_name = "FOMO-mva23" # "drones_only_FOMO"
+dataset_name = "drones_only_FOMO" #"FOMO-mva23" #
 
 # coco_dataset = CML_Dataset.get(dataset_name="drones_only_FOMO", dataset_project="SmallObjectDetection")
 # coco_dataset = CML_Dataset.get(dataset_id='45062c8b1fac490480d105ad9c945f22')
 # dataset_path = coco_dataset.get_local_copy()
 
-dataset_path = CML_Dataset.get(dataset_name=dataset_name, dataset_project="SmallObjectDetection").get_local_copy()
+dataset = CML_Dataset.get(dataset_name=dataset_name, dataset_project="SmallObjectDetection")
+dataset_path = dataset.get_local_copy()
 TRAIN_ANNOTATION_FILE = f"{dataset_path}/train/train_annotations/mva23_FOMO_train.json"
 TRAIN_IMAGE_DIR = f"{dataset_path}/train/images"
 VAL_ANNOTATION_FILE = f"{dataset_path}/val/val_annotations/mva23_FOMO_val.json"
@@ -55,12 +57,13 @@ VAL_IMAGE_DIR = f"{dataset_path}/val/images"
 params = {
     "NUM_CLASSES" : 2,  # Кол-во классов (включая фон)
     "INPUT_SIZE" : (224, 224), # Размер входного изображения
-    'BATCH_SIZE' : 512,
+    'BATCH_SIZE' : 128,
     "EPOCHS" : 150,
     "LR" : 1e-3,
     "trunkAt" : 4, # Номер слоя, где обрезать MobileNet. Для карты размером 56 это значение 4
     "NUM_WORKERS" : 2,
-
+    "DATASET" : dataset.name,
+    "DATASET_VERSION": dataset.version,
     }
 params = task.connect(params)
 
@@ -257,12 +260,12 @@ def main():
 
         # Сохранение весов
         if epoch != 0 and epoch%10 ==0:
-            torch.save(model.state_dict(), f"FOMO_56_crossEntropy_{dataset_name}_{epoch}e_model_weights.pth")
+            torch.save(model.state_dict(), f"FOMO_56_crossEntropy_{dataset_name}_{params['DATASET_VERSION']}_{epoch}e_model_weights.pth")
             print("Model weights saved!")
 
         if val_loss < best_val_loss:
             best_val_loss = val_loss
-            torch.save(model.state_dict(), f'BEST_FOMO_56_crossEntropy_{dataset_name}_{epoch}e_model_weights.pth')
+            torch.save(model.state_dict(), f'BEST_FOMO_56_crossEntropy_{dataset_name}_{params['DATASET_VERSION']}_{epoch}e_model_weights.pth')
 
 
 

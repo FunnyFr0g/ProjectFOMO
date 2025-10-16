@@ -64,7 +64,7 @@ def add_background_images_to_coco(original_coco_json_path,  # Путь к исх
         image_info = {
             "id": new_image_id,
             "file_name": new_filename,  # Важно: использовать новое имя файла
-            "license": 1, # Укажите соответствующий license ID или оставьте как есть.
+            "license": 1,
             "flickr_url": "",
             "coco_url": "",
             "date_captured": ""
