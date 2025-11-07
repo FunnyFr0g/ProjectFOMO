@@ -16,22 +16,20 @@ from tqdm import tqdm
 # from torch.utils.tensorboard import SummaryWriter
 import time
 from clearml import Dataset as CML_Dataset
-
-
-
+from PIL import Image
 # task = Task.init(
 #     project_name='SmallObjectDetection',
 #     task_name='FOMO-dronesOnly_train',
 #     tags=['FOMO'])
 
-USE_CLEARML = False
+USE_CLEARML = True
 
 if USE_CLEARML:
     Task.ignore_requirements('pywin32')
     Task.add_requirements("networkx","3.4.2")
     task = Task.init(
             project_name='SmallObjectDetection',
-            task_name='FOMO_56-doF_background_train',
+            task_name='FOMO_56-doF_background_crop_train',
             tags=['FOMO'],
             reuse_last_task_id=True
             )
@@ -47,7 +45,8 @@ dataset_name = "drones_only_FOMO" #"FOMO-mva23" #
 # coco_dataset = CML_Dataset.get(dataset_id='45062c8b1fac490480d105ad9c945f22')
 # dataset_path = coco_dataset.get_local_copy()
 
-dataset = CML_Dataset.get(dataset_name=dataset_name, dataset_project="SmallObjectDetection")
+# dataset = CML_Dataset.get(dataset_name=dataset_name, dataset_project="SmallObjectDetection")
+dataset = CML_Dataset.get(dataset_id='8ab8a51ea4304f20b272848a8b01a238')
 dataset_path = dataset.get_local_copy()
 # TRAIN_ANNOTATION_FILE = f"{dataset_path}/train/train_annotations/mva23_FOMO_train.json"
 # TRAIN_IMAGE_DIR = f"{dataset_path}/train/images"
@@ -71,6 +70,7 @@ params = {
     "NUM_WORKERS" : 1,
     "DATASET" : dataset.name,
     "DATASET_VERSION": dataset.version,
+    "DATASET_ID" : dataset.id,
     }
 if USE_CLEARML:
     params = task.connect(params)
@@ -94,8 +94,14 @@ class CocoDataset(Dataset):
         img_id = self.image_ids[idx]
         img_info = self.coco.loadImgs(img_id)[0]
         img_path = os.path.join(self.image_dir, img_info['file_name'])
-        image = cv2.imread(img_path)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        try:
+            image = cv2.imread(img_path) # крашит на кириллице
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        except Exception as e:
+            # print(f"Failed to convert {img_path} to RGB, ")
+            image = Image.open(img_path).convert('RGB')
+            image = np.array(image)
 
         # Получаем аннотации для изображения
         ann_ids = self.coco.getAnnIds(imgIds=img_id)
@@ -269,14 +275,17 @@ def main():
                 title="Loss", series="Val", value=val_loss, iteration=epoch
             )
 
+        workdir = f'weights/FOMO_56_bg_crop_{dataset_name}_{params["DATASET_VERSION"]}'
+        os.makedirs(workdir, exist_ok=True)
+
         # Сохранение весов
         if epoch != 0 and epoch%10 ==0:
-            torch.save(model.state_dict(), f'FOMO_56_bg_no_resize_{dataset_name}_{params["DATASET_VERSION"]}_{epoch}e_model_weights.pth')
+            torch.save(model.state_dict(), os.path.join(workdir, f'{epoch}e.pth'))
             print("Model weights saved!")
 
         if val_loss < best_val_loss:
             best_val_loss = val_loss
-            torch.save(model.state_dict(), f'BEST_FOMO_56_bg_no_resize_{dataset_name}_{params["DATASET_VERSION"]}_{epoch}e_model_weights.pth')
+            torch.save(model.state_dict(), os.path.join(workdir, f'BEST_{epoch}e.pth'))
 
 
 
