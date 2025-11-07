@@ -17,6 +17,9 @@ from tqdm import tqdm
 import time
 from clearml import Dataset as CML_Dataset
 from PIL import Image
+
+from FOMOmodels import FomoModelResV0
+
 # task = Task.init(
 #     project_name='SmallObjectDetection',
 #     task_name='FOMO-dronesOnly_train',
@@ -29,7 +32,7 @@ if USE_CLEARML:
     Task.add_requirements("networkx","3.4.2")
     task = Task.init(
             project_name='SmallObjectDetection',
-            task_name='FOMO_56-doF_background_crop_train',
+            task_name='FOMO_56-res-v0_background_crop_train',
             tags=['FOMO'],
             reuse_last_task_id=True
             )
@@ -65,6 +68,7 @@ params = {
     "EPOCHS" : 150,
     "LR" : 1e-3,
     "trunkAt" : 4, # Номер слоя, где обрезать MobileNet. Для карты размером 56 это значение 4
+    "use_residual" : True,
     "NUM_WORKERS" : 1,
     "DATASET" : dataset.name,
     "DATASET_VERSION": dataset.version,
@@ -257,7 +261,8 @@ def main():
                             )
 
     # Модель и оптимизатор
-    model = FomoModel(params["NUM_CLASSES"]).to(DEVICE)
+    # model = FomoModel(params["NUM_CLASSES"]).to(DEVICE)
+    model = FomoModelResV0(params["NUM_CLASSES"], use_residual=params['use_residual']).to(DEVICE)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=params["LR"])
 
@@ -279,7 +284,7 @@ def main():
                 title="Loss", series="Val", value=val_loss, iteration=epoch
             )
 
-        workdir = f'weights/FOMO_56_bg_crop_{dataset_name}_{params["DATASET_VERSION"]}'
+        workdir = f'weights/FOMO_56-res-v0_{dataset_name}_{params["DATASET_VERSION"]}'
         os.makedirs(workdir, exist_ok=True)
 
         # Сохранение весов

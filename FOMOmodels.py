@@ -120,7 +120,11 @@ transform = A.Compose([
 class FomoBackbone56(nn.Module):
     def __init__(self):
         super().__init__()
-        self.mobilenet = mobilenet_v2(pretrained=True).features[:4]  # Обрезаем MobileNetV2
+        # self.mobilenet = mobilenet_v2(pretrained=True).features[:4]  # Обрезаем MobileNetV2
+        mobilenet = mobilenet_v2(weights=None)
+        state_dict = torch.load('models/mobilenet_v2_weights.pth', map_location='cpu')
+        mobilenet.load_state_dict(state_dict)
+        self.mobilenet = mobilenet.features[:4]  # Обрезаем MobileNetV2
 
     def forward(self, x):
         return self.mobilenet(x)
@@ -157,6 +161,111 @@ class FomoModel56(nn.Module):
     def forward(self, x):
         features = self.backbone(x)
         return self.head(features)
+
+
+class ResidualBlock(nn.Module): # res-блоки для FOMO
+    def __init__(self, channels, expansion=2, dropout=0.1):
+        super(ResidualBlock, self).__init__()
+        expanded_channels = channels * expansion
+
+        self.conv1 = nn.Conv2d(channels, expanded_channels, kernel_size=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(expanded_channels)
+        self.act1 = nn.ReLU6(inplace=True)
+
+        self.conv2 = nn.Conv2d(expanded_channels, expanded_channels, kernel_size=3,
+                               padding=1, groups=expanded_channels, bias=False)  # depthwise
+        self.bn2 = nn.BatchNorm2d(expanded_channels)
+        self.act2 = nn.ReLU6(inplace=True)
+
+        self.conv3 = nn.Conv2d(expanded_channels, channels, kernel_size=1, bias=False)
+        self.bn3 = nn.BatchNorm2d(channels)
+
+        self.dropout = nn.Dropout2d(dropout)
+
+    def forward(self, x):
+        residual = x
+
+        out = self.conv1(x)
+        out = self.bn1(out)
+        out = self.act1(out)
+
+        out = self.conv2(out)
+        out = self.bn2(out)
+        out = self.act2(out)
+
+        out = self.conv3(out)
+        out = self.bn3(out)
+        out = self.dropout(out)
+
+        out = out + residual  # skip connection
+        out = nn.ReLU6(inplace=True)(out)
+
+        return out
+
+
+class FomoHeadResV0(nn.Module):
+    def __init__(self, num_classes, num_blocks=2, dropout=0.1):
+        super().__init__()
+
+        # Первоначальное увеличение глубины
+        self.initial_conv = nn.Conv2d(24, 48, kernel_size=3, padding=1)
+        self.initial_bn = nn.BatchNorm2d(48)
+        self.initial_act = nn.ReLU6(inplace=True)
+
+        # Стек residual-блоков
+        self.residual_blocks = nn.Sequential(*[
+            ResidualBlock(48, expansion=2, dropout=dropout)
+            for _ in range(num_blocks)
+        ])
+
+        # Промежуточное сжатие каналов
+        self.mid_conv = nn.Conv2d(48, 32, kernel_size=1)
+        self.mid_bn = nn.BatchNorm2d(32)
+        self.mid_act = nn.ReLU6(inplace=True)
+
+        # Финальная классификация
+        self.final_conv = nn.Conv2d(32, num_classes, kernel_size=1)
+
+        # Инициализация весов
+        self._initialize_weights()
+
+    def _initialize_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+
+    def forward(self, x):
+        x = self.initial_conv(x)
+        x = self.initial_bn(x)
+        x = self.initial_act(x)
+
+        x = self.residual_blocks(x)
+
+        x = self.mid_conv(x)
+        x = self.mid_bn(x)
+        x = self.mid_act(x)
+
+        x = self.final_conv(x)
+        return x
+
+class FomoModelResV0(nn.Module):
+    def __init__(self, num_classes, use_residual=True, num_res_blocks=2):
+        super().__init__()
+        self.backbone = FomoBackbone56()
+        if use_residual:
+            self.head = FomoHeadResV0(num_classes, num_blocks=num_res_blocks)
+        else:
+            self.head = FomoHead56(num_classes)  # оригинальная голова
+
+    def forward(self, x):
+        features = self.backbone(x)
+        return self.head(features)
+
 
 # --- 3. Модель FOMO С картой 112x112 (срез на 2 слое) ---
 class FomoBackbone112(nn.Module):

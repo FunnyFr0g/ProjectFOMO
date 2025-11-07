@@ -8,16 +8,14 @@ gt_pathes = {
 }
 
 pred_pathes = {
-    # 'drones_only_FOMO_val FOMO_56_104e' : 'predictions/BEST_FOMO_56_crossEntropy_dronesOnly_104e_model_weights_predictions.json',
     'drones_only_FOMO_val FOMO_56_104e' : 'predictions/BEST_FOMO_56_crossEntropy_dronesOnly_104e_model_weights_predictions_aligned.json',
     'drones_only_FOMO_val FOMO_bg_56_14e': r'predictions/drones_only_FOMO_BEST_FOMO_56_crossEntropy_drones_only_FOMO_1.0.1_14e_model_weights/annotations/predictions_aligned.json',
-    # 'drones_only_FOMO_val FOMO_bg_56_14e': r'predictions/drones_only_FOMO_BEST_FOMO_56_crossEntropy_drones_only_FOMO_1.0.1_14e_model_weights/annotations/predictions.json',
+    'drones_only_FOMO_val FOMO_56_22e_bg_crop' : r'predictions/drones_only_FOMO!BEST_22e/annotations/predictions.json',
     'drones_only_val FOMO_bg_56_14e': r'predictions\drones_only!BEST_FOMO_56_crossEntropy_drones_only_FOMO_1.0.1_14e_model_weights\annotations\predictions_aligned.json',
     'drones_only_val FOMO_56_104e' : 'predictions/drones_only_BEST_FOMO_56_crossEntropy_dronesOnly_104e_model_weights/BEST_FOMO_56_crossEntropy_dronesOnly_104e_model_weights_predictions.json',
-    # 'drones_only_val FOMO_56_104e' : r'predictions\drones_only!BEST_FOMO_56_crossEntropy_dronesOnly_104e_model_weights\annotations\predictions.json',
     'drones_only_val FOMO_56_104e_NORESIZE' : r'predictions\NORESIZE_drones_only!BEST_FOMO_56_crossEntropy_dronesOnly_104e_model_weights\annotations\predictions.json',
+    'drones_only_val FOMO_56_22e_bg_crop' : r'predictions/drones_only!BEST_22e/annotations/predictions.json',
     'drones_only_val baseline' : 'predictions/baseline/baseline_dronesonly_val.json',
-    # 'drones_only_val baseline' : 'predictions/baseline/baseline_dronesonly_val_alligned.json',
     'mva23_val YOLO12n 1088px': r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\YOLO\runs\detect\val y=12n p=1088 mva23_val\coco_predictions.json',
 }
 

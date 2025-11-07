@@ -22,7 +22,7 @@ TRUNK_AT = 4
 NUM_CLASSES = 2
 W, H = 1920, 1080
 VIDEO_SIZE = (H, W)
-MODEL_NAME = 'FOMO_14e_bg'
+MODEL_NAME = 'FOMO_22e_bg_cr'
 
 SHOW_IMAGE = False
 
@@ -330,7 +330,7 @@ def visualize_detections(frame, annotations, frame_count, output_video, mask=Non
 # Основной код
 def main():
     model = FomoModel(num_classes=NUM_CLASSES)
-    checkpoint_path = 'weights/BEST_FOMO_56_crossEntropy_drones_only_FOMO_1.0.1_14e_model_weights.pth'
+    checkpoint_path = 'weights/FOMO_56_bg_crop_drones_only_FOMO_1.0.2/BEST_22e.pth'
     model.load_state_dict(torch.load(checkpoint_path))
     model.eval()
 
