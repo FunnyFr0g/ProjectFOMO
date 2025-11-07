@@ -22,7 +22,7 @@ from PIL import Image
 #     task_name='FOMO-dronesOnly_train',
 #     tags=['FOMO'])
 
-USE_CLEARML = False
+USE_CLEARML = True
 
 if USE_CLEARML:
     Task.ignore_requirements('pywin32')
