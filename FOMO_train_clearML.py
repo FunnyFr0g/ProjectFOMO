@@ -37,8 +37,6 @@ if USE_CLEARML:
 
 # task.connect(params)
 
-
-
 dataset_name = "drones_only_FOMO" #"FOMO-mva23" #
 
 # coco_dataset = CML_Dataset.get(dataset_name="drones_only_FOMO", dataset_project="SmallObjectDetection")
