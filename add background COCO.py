@@ -91,13 +91,12 @@ def add_background_images_to_coco(original_coco_json_path,  # Путь к исх
     print(f"Общее количество изображений в датасете: {len(coco_data['images'])}")
     print(f"Общее количество аннотаций в датасете: {len(coco_data['annotations'])}")
 
-# Пример использования
 if __name__ == "__main__":
     # Пути к вашим данным
-    path_to_original_annotations = r"C:\Users\ILYA\.clearml\cache\storage_manager\datasets\drones only fomo city background\train\train_annotations.json"
-    path_to_backgrounds = r"C:\Users\ILYA\.clearml\cache\storage_manager\datasets\drones only fomo city background\train\city_background"
-    path_to_new_annotations = r"C:\Users\ILYA\.clearml\cache\storage_manager\datasets\drones only fomo city background\train\train_annotations_bg.json"
-    path_to_output_images = r"C:\Users\ILYA\.clearml\cache\storage_manager\datasets\drones only fomo city background\train\images" # Та же папка, где лежат оригинальные изображения
+    path_to_original_annotations = r"C:\Users\ILYA\.clearml\cache\storage_manager\datasets\dronesonly_FOMO_bg_crop\train\train_annotations.json"
+    path_to_backgrounds = r"Data/background_crop"
+    path_to_new_annotations = r"C:\Users\ILYA\.clearml\cache\storage_manager\datasets\dronesonly_FOMO_bg_crop\train\train_annotations_bg.json"
+    path_to_output_images = r"C:\Users\ILYA\.clearml\cache\storage_manager\datasets\dronesonly_FOMO_bg_crop\train\images" # Та же папка, где лежат оригинальные изображения
 
     add_background_images_to_coco(
         original_coco_json_path=path_to_original_annotations,

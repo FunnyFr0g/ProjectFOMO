@@ -3,7 +3,7 @@ import json
 import cv2
 import numpy as np
 
-# from Birds.scripts.label_pathes import pred_pathes
+from label_pathes import pred_pathes, gt_pathes
 
 
 class CocoViewer:
@@ -100,7 +100,8 @@ class CocoViewer:
             print(f"Failed to load image: {image_path}")
             return
 
-        image_info = self.filename_to_image_info.get(current_file, None)
+        # image_info = self.filename_to_image_info.get(current_file, None)
+        image_info = self.filename_to_image_info.get(current_file.strip('0'), None) #### УДАЛИТЬ ЛИШНИЕ НУЛИ В НАЧАЛЕ
         annotated_image = self.draw_annotations(image.copy(), image_info)
         print(image_info)
 
@@ -110,7 +111,8 @@ class CocoViewer:
 
         # Add threshold info
         threshold_text = f"Conf threshold: {self.conf_threshold:.2f} (W/S to adjust)"
-        cv2.putText(annotated_image, threshold_text, (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 0)
+        cv2.putText(annotated_image, threshold_text, (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0, (0, 0, 0), 2)
+        cv2.putText(annotated_image, threshold_text, (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 0)
 
         # Add help text
         help_text = "A/D: navigate, W/S: conf threshold, ESC: exit"
@@ -175,14 +177,40 @@ if __name__ == "__main__":
     # coco_json = 'FOMO_50e_predictions.json'
 
     ### FOMO
-    image_folder = r'C:\Users\ILYA\.clearml\cache\storage_manager\datasets\ds_ae8c12c33b324947af9ae6379d920eb8\images\train'
-    coco_json = r'C:\Users\ILYA\.clearml\cache\storage_manager\datasets\ds_ae8c12c33b324947af9ae6379d920eb8\train_annotations.json'
+    # image_folder = r'C:\Users\ILYA\.clearml\cache\storage_manager\datasets\ds_ae8c12c33b324947af9ae6379d920eb8\images\train'
+    # coco_json = r'C:\Users\ILYA\.clearml\cache\storage_manager\datasets\ds_ae8c12c33b324947af9ae6379d920eb8\train_annotations.json'
 
 
+    ## FOMO bg | dronesonly FOMO val
+    # image_folder = r'C:\Users\ILYA\.clearml\cache\storage_manager\datasets\ds_45062c8b1fac490480d105ad9c945f22\val\images'
+    # coco_json = pred_pathes['drones_only_FOMO_val FOMO_bg_56_14e']
+    image_folder = r'C:\Users\ILYA\.clearml\cache\storage_manager\datasets\ds_ae8c12c33b324947af9ae6379d920eb8\images\val'
+    # coco_json = pred_pathes['drones_only_val FOMO_bg_56_14e']
+    coco_json = pred_pathes['drones_only_val FOMO_56_104e']
+    coco_json = r'predictions\drones_only!BEST_FOMO_56_crossEntropy_drones_only_FOMO_1.0.1_14e_model_weights\annotations\predictions_aligned.json'
+    coco_json = r'predictions\NORESIZE_drones_only!BEST_FOMO_56_crossEntropy_dronesOnly_104e_model_weights\annotations\predictions.json'
+    # coco_json = gt_pathes['drones_only_val']
+
+
+    ### baseline val
+    # image_folder = r'C:\Users\ILYA\.clearml\cache\storage_manager\datasets\ds_ae8c12c33b324947af9ae6379d920eb8\images\val'
+    # coco_json = pred_pathes['drones_only_val baseline']
+    # coco_json = 'predictions/baseline/baseline_dronesonly_val.json'
+
+    #baseline hardnegative
+    # image_folder = r'C:\Users\ILYA\.clearml\cache\storage_manager\datasets\ds_ae8c12c33b324947af9ae6379d920eb8\images\train'
+    # coco_json = 'predictions/baseline/train_coco_hard_negative.json'
 
 
     # image_folder = r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\data\vid2\screens'
     # coco_json = os.path.join(image_folder, 'FOMO_50e_predictions.json')
+
+
+    # old mva23 bird val prdict
+    # image_folder = r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\data\mva2023_sod4bird_train\val\images'
+    # coco_json = r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\submit\mva23_val\coco_predictions.json'
+    # coco_json = r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\submit\mva23_val\predicts_new_script.json' # через мой скрипт
+
 
     viewer = CocoViewer(image_folder, coco_json)
     viewer.run()

@@ -22,7 +22,7 @@ TRUNK_AT = 4
 NUM_CLASSES = 2
 W, H = 1920, 1080
 VIDEO_SIZE = (H, W)
-MODEL_NAME = 'FOMO_104e'
+MODEL_NAME = 'FOMO_14e_bg'
 
 SHOW_IMAGE = False
 
@@ -84,7 +84,7 @@ def scale_coords(coords, from_size=(56, 56), to_size=(224, 224), orig_size=None)
     if orig_size is None:
         orig_size = to_size
 
-    orig_size = orig_size[::-1]
+    orig_size = orig_size[::-1] # очень важный фикс для неквадратного изображения
 
     # Сначала масштабируем к входному размеру модели (224x224)
     y_scale = to_size[0] / from_size[0]
@@ -330,7 +330,7 @@ def visualize_detections(frame, annotations, frame_count, output_video, mask=Non
 # Основной код
 def main():
     model = FomoModel(num_classes=NUM_CLASSES)
-    checkpoint_path = 'weights/BEST_FOMO_56_crossEntropy_dronesOnly_104e_model_weights.pth'
+    checkpoint_path = 'weights/BEST_FOMO_56_crossEntropy_drones_only_FOMO_1.0.1_14e_model_weights.pth'
     model.load_state_dict(torch.load(checkpoint_path))
     model.eval()
 

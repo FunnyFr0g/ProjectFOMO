@@ -11,17 +11,21 @@ from pycocotools.coco import COCO
 from pycocotools import mask as maskUtils
 from clearml import Task, Dataset
 import zipfile
+from tqdm import tqdm
 
 
-use_clearml = False
+use_clearml = True
 
 if use_clearml:
     Task.ignore_requirements('pywin32')
-    task = Task.init(project_name="SmallObjectDetection", task_name="PredictFOMO_drones_only_val")
-    task.execute_remotely(queue_name='default', exit_process=True)
+    task = Task.init(project_name="SmallObjectDetection",
+                     task_name="FOMO 104e no resize drones_only_val",
+                     )
+    # task.execute_remotely(queue_name='default', exit_process=True)
 
 params = {
 "NUM_CLASSES" : 2,  # Кол-во классов (включая фон)
+'DO_RESIZE' : False,
 "INPUT_SIZE" : (224, 224), # Размер входного изображения
 "BOX_SIZE" : 8,  # Размер стороны квадратного желаемого bounding box'а в пикселях
 }
@@ -31,8 +35,6 @@ if use_clearml:
 # Константы
 TRUNK_AT = 4
 NUM_CLASSES = 2
-
-
 
 # Чтобы подружить кириллицу с CV2 Сохраняем оригинальные функции
 _original_imread = cv2.imread
@@ -112,12 +114,19 @@ def prepare_image(image_path):
     orig_h, orig_w = image.shape[:2]
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-    transform = transforms.Compose([
-        transforms.ToPILImage(),
-        transforms.Resize(params["INPUT_SIZE"]),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-    ])
+    if params['DO_RESIZE']:
+        transform = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize(params["INPUT_SIZE"]),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ])
+    else:
+        transform = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ])
 
     image_tensor = transform(image)
     return image_tensor.unsqueeze(0), (orig_w, orig_h)
@@ -128,13 +137,24 @@ def scale_coords(coords, from_size=(56, 56), to_size=params["INPUT_SIZE"], orig_
     if orig_size is None:
         orig_size = to_size
 
+    orig_size = orig_size[::-1]  # очень важный фикс для неквадратного изображения (хотя чето нет)
     # Сначала масштабируем к входному размеру модели (224x224)
-    x_scale = to_size[0] / from_size[0]
-    y_scale = to_size[1] / from_size[1]
+    y_scale = to_size[0] / from_size[0]
+    x_scale = to_size[1] / from_size[1]
 
     # Затем масштабируем к оригинальному разрешению изображения
-    x_scale *= orig_size[0] / to_size[0]
-    y_scale *= orig_size[1] / to_size[1]
+    y_scale *= orig_size[0] / to_size[0]
+    x_scale *= orig_size[1] / to_size[1]
+
+
+    # # Сначала масштабируем к входному размеру модели (224x224)
+    # x_scale = to_size[0] / from_size[0]
+    # y_scale = to_size[1] / from_size[1]
+    #
+    # # Затем масштабируем к оригинальному разрешению изображения
+    # x_scale *= orig_size[0] / to_size[0]
+    # y_scale *= orig_size[1] / to_size[1]
+
 
     scaled_coords = []
     for y, x in coords:
@@ -360,10 +380,12 @@ from FOMOmodels import FomoModel56, FomoModel112
 import time
 
 
-def main(model = FomoModel56(), draw_bbox=True):
+def main(model = FomoModel56(), draw_bbox=False, reference_json=None, dir_prefix=''):
     # FomoModel(num_classes=NUM_CLASSES)
     # checkpoint_path = r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\FOMO\checkpoints\checkpoint_epoch_100.pth'
     checkpoint_path = 'weights/BEST_FOMO_56_crossEntropy_dronesOnly_104e_model_weights.pth'
+    # checkpoint_path = 'weights/BEST_FOMO_56_crossEntropy_drones_only_FOMO_1.0.1_14e_model_weights.pth'
+    # checkpoint_path = 'weights/LATEST.pth'
 
     model_name = checkpoint_path.split('/')[-1].strip('.pth')
 
@@ -371,18 +393,24 @@ def main(model = FomoModel56(), draw_bbox=True):
     model.load_state_dict(state_dict)
     model.eval()
 
-    dataset_name = "drones_only_FOMO"
-    coco_dataset = Dataset.get(dataset_name=dataset_name, dataset_project="SmallObjectDetection")
+    dataset_name = "drones_only"
+    # coco_dataset = Dataset.get(dataset_name=dataset_name, dataset_project="SmallObjectDetection")
+    coco_dataset = Dataset.get(dataset_id='ae8c12c33b324947af9ae6379d920eb8') # drones only 1.0.5
     dataset_path = coco_dataset.get_local_copy()
     img_dir = f"{dataset_path}/val/images"
+    if not os.path.exists(img_dir):
+        img_dir = f"{dataset_path}/images/val"
+    if not os.path.exists(img_dir):
+        raise Exception('Неверный путь к изображениям', img_dir)
+
     #
     # dataset_name = "drones_only"
     # coco_dataset = Dataset.get(dataset_name=dataset_name, dataset_project="YOLOv5", dataset_version='1.0.5')
     # dataset_path = coco_dataset.get_local_copy()
     # img_dir = f"{dataset_path}/images/val"
 
-    output_dir = os.path.join('predictions', f'{dataset_name}_{model_name}')
-    output_json = os.path.join(output_dir,'annotations', model_name+'_predictions.json')
+    output_dir = os.path.join('predictions', dir_prefix +f'{dataset_name}!{model_name}')
+    output_json = os.path.join(output_dir,'annotations', 'predictions.json')
     os.makedirs(os.path.dirname(output_json), exist_ok=True)
 
     all_annotations = []
@@ -391,25 +419,41 @@ def main(model = FomoModel56(), draw_bbox=True):
 
     start_time = time.time()
 
-    images_count = len(os.listdir(img_dir))
 
-    for img_name in os.listdir(img_dir):
+    # Если указан эталонный JSON, загружаем маппинг filename -> image_id
+    filename_to_id = {}
+    if reference_json and os.path.exists(reference_json):
+        with open(reference_json, 'r') as f:
+            ref_data = json.load(f)
+        filename_to_id = {img['file_name']: img['id'] for img in ref_data['images']}
+        print(f"Загружен эталонный JSON с {len(filename_to_id)} изображениями")
+
+    counter = 0
+
+    for img_name in tqdm(os.listdir(img_dir)):
+        counter += 1
+        # if counter == 100:
+        #     break
         if img_name.endswith('.json'):
             continue
 
-        image_id += 1
+        # Определяем image_id в зависимости от наличия эталонного JSON
+        if reference_json and img_name in filename_to_id:
+            # Используем image_id из эталонного файла
+            image_id = filename_to_id[img_name]
+        else:
+            # Используем автоинкремент, начиная с 1
+            image_id += 1
+            if reference_json and img_name not in filename_to_id:
+                print(f"Предупреждение: {img_name} не найден в эталонном JSON, присвоен ID: {image_id}")
+                raise Exception('Нет файла, лучше убрать этот JSON')
 
-        if image_id % 100 == 0:
-            print(f'{image_id}/{images_count} {image_id/images_count*100 :.2f}%')
         # image_id = int(img_name.strip('.jpg'))
         img_path = os.path.join(img_dir, img_name)
         image_tensor, orig_size = prepare_image(img_path)
 
         with torch.no_grad():
             output = model(image_tensor)
-            print(f'{output.shape=}')
-            print(f'{output=}')
-            int(input("ыы"))
             probs = F.softmax(output, dim=1).squeeze(0).cpu().numpy()  # [C, H, W]
             # print(f'{probs.shape=}')
             pred_mask = torch.argmax(output, dim=1).squeeze().cpu().numpy()  # [H, W]
@@ -463,5 +507,7 @@ def main(model = FomoModel56(), draw_bbox=True):
 
 
 if __name__ == '__main__':
-    main()
+    reference_json = None
+    reference_json = 'GTlabels/ae8c12c33b324947af9ae6379d920eb8/coco_annotations_val.json'
+    main(draw_bbox=False, reference_json=reference_json, dir_prefix='NORESIZE_')
 

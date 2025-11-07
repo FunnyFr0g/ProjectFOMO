@@ -24,19 +24,22 @@ from clearml import Dataset as CML_Dataset
 #     task_name='FOMO-dronesOnly_train',
 #     tags=['FOMO'])
 
-Task.ignore_requirements('pywin32')
-Task.add_requirements("networkx","3.4.2")
-task = Task.init(
-        project_name='SmallObjectDetection',
-        task_name='FOMO_56-doF_background_train',
-        tags=['FOMO'],
-        reuse_last_task_id=True
-        )
+USE_CLEARML = False
 
+if USE_CLEARML:
+    Task.ignore_requirements('pywin32')
+    Task.add_requirements("networkx","3.4.2")
+    task = Task.init(
+            project_name='SmallObjectDetection',
+            task_name='FOMO_56-doF_background_train',
+            tags=['FOMO'],
+            reuse_last_task_id=True
+            )
+    task.execute_remotely(queue_name='default', exit_process=True)
 
 # task.connect(params)
 
-task.execute_remotely(queue_name='default', exit_process=True)
+
 
 dataset_name = "drones_only_FOMO" #"FOMO-mva23" #
 
@@ -69,7 +72,8 @@ params = {
     "DATASET" : dataset.name,
     "DATASET_VERSION": dataset.version,
     }
-params = task.connect(params)
+if USE_CLEARML:
+    params = task.connect(params)
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -98,7 +102,8 @@ class CocoDataset(Dataset):
         anns = self.coco.loadAnns(ann_ids)
 
         # Создаём маску классов (H, W)
-        mask = np.zeros((image.shape[0], image.shape[1]), dtype=np.uint8)
+        H, W, _ = image.shape
+        mask = np.zeros((H, W), dtype=np.uint8)
 
         for ann in anns:
             if ann['category_id'] in self.cat_ids:
@@ -121,6 +126,7 @@ class CocoDataset(Dataset):
 
         mask = torch.nn.functional.interpolate(
             mask.float().unsqueeze(0).unsqueeze(0),  # Добавляем batch и channel [1, 1, 224, 224]
+            # size=(H//4, W//4),  # Новый размер
             size=(56, 56),  # Новый размер
             # size=(112, 112),  # Новый размер
             mode='nearest'  # Без интерполяции (сохраняем целые классы)
@@ -138,7 +144,7 @@ class CocoDataset(Dataset):
 
 # Трансформации
 transform = A.Compose([
-    A.Resize(params["INPUT_SIZE"][0], params["INPUT_SIZE"][1]),
+    # A.Resize(params["INPUT_SIZE"][0], params["INPUT_SIZE"][1]),
     A.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ToTensorV2(),
 ])
@@ -255,21 +261,22 @@ def main():
         print(f"Epoch {epoch+1}/{params['EPOCHS']}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
 
         # Логирование метрик
-        task.get_logger().report_scalar(
-            title="Loss", series="Train", value=train_loss, iteration=epoch
-        )
-        task.get_logger().report_scalar(
-            title="Loss", series="Val", value=val_loss, iteration=epoch
-        )
+        if USE_CLEARML:
+            task.get_logger().report_scalar(
+                title="Loss", series="Train", value=train_loss, iteration=epoch
+            )
+            task.get_logger().report_scalar(
+                title="Loss", series="Val", value=val_loss, iteration=epoch
+            )
 
         # Сохранение весов
         if epoch != 0 and epoch%10 ==0:
-            torch.save(model.state_dict(), f'FOMO_56_crossEntropy_{dataset_name}_{params["DATASET_VERSION"]}_{epoch}e_model_weights.pth')
+            torch.save(model.state_dict(), f'FOMO_56_bg_no_resize_{dataset_name}_{params["DATASET_VERSION"]}_{epoch}e_model_weights.pth')
             print("Model weights saved!")
 
         if val_loss < best_val_loss:
             best_val_loss = val_loss
-            torch.save(model.state_dict(), f'BEST_FOMO_56_crossEntropy_{dataset_name}_{params["DATASET_VERSION"]}_{epoch}e_model_weights.pth')
+            torch.save(model.state_dict(), f'BEST_FOMO_56_bg_no_resize_{dataset_name}_{params["DATASET_VERSION"]}_{epoch}e_model_weights.pth')
 
 
 

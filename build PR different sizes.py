@@ -7,7 +7,7 @@ from tqdm import tqdm
 from sklearn.metrics import auc as sk_auc
 from sklearn.metrics import precision_recall_curve, average_precision_score
 
-iou_threshold = 1e-3
+iou_threshold = 1e-9
 
 
 def calculate_iou(box1, box2):
@@ -48,7 +48,6 @@ def calculate_precision_recall_with_size_ranges(gt_annotations, pred_annotations
 
     if size_ranges is None:
         size_ranges = [(0, 25), (25, 50), (50, float('inf'))]
-
 
     results = {}
 
@@ -210,10 +209,117 @@ def plot_precision_recall_curves_size_ranges(results, title, save_path):
     plt.ylim([0.0, 1.05])
     plt.xlim([0.0, 1.0])
     plt.title(title)
-    plt.legend(loc="lower left", fontsize=10)
+    plt.legend(loc="upper right", fontsize=10)
     plt.grid(True, alpha=0.3)
     plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.close()
+
+
+def create_unified_size_ranges_grid(all_results, datasets_list, predict_list, output_dir, iou_threshold=0.5):
+    """Создает единое полотно с графиками для всех датасетов и моделей"""
+
+    # Определяем размеры полотна
+    n_datasets = len(datasets_list)
+    n_models = len(predict_list)
+
+    # Создаем subplot grid
+    fig, axes = plt.subplots(n_datasets, n_models, figsize=(5 * n_models, 4 * n_datasets))
+
+    # Если только одна строка или один столбец, преобразуем axes в 2D массив
+    if n_datasets == 1:
+        axes = axes.reshape(1, -1)
+    if n_models == 1:
+        axes = axes.reshape(-1, 1)
+
+    colors = ['blue', 'red', 'green', 'orange', 'purple', 'brown', 'pink', 'gray']
+
+    # Проходим по всем комбинациям датасетов и моделей
+    for i, dataset_name in enumerate(datasets_list):
+        for j, model_name in enumerate(predict_list):
+            ax = axes[i, j]
+
+            # Получаем результаты для текущей пары датасет/модель
+            key = (dataset_name, model_name)
+            if key in all_results:
+                results = all_results[key]
+
+                # Рисуем все кривые для разных размеров
+                for k, (size_range, result) in enumerate(results.items()):
+                    min_size, max_size = size_range
+                    if max_size == float('inf'):
+                        label = f'≥{min_size}px (AP={result["ap"]:.3f})'
+                    else:
+                        label = f'{min_size}-{max_size}px (AP={result["ap"]:.3f})'
+
+                    ax.plot(result['recall'], result['precision'],
+                            color=colors[k % len(colors)], label=label, linewidth=2)
+
+                ax.set_xlabel('Recall')
+                ax.set_ylabel('Precision')
+                ax.set_ylim([0.0, 1.05])
+                ax.set_xlim([0.0, 1.0])
+                ax.set_title(f'{dataset_name}\n{model_name}', fontsize=10)
+                ax.legend(loc="upper right", fontsize=8)
+                ax.grid(True, alpha=0.3)
+            else:
+                ax.text(0.5, 0.5, 'No data', ha='center', va='center', transform=ax.transAxes)
+                ax.set_title(f'{dataset_name}\n{model_name}', fontsize=10)
+
+    plt.tight_layout()
+    grid_save_path = os.path.join(output_dir, f'unified_size_ranges_grid_iou_{iou_threshold}.png')
+    plt.savefig(grid_save_path, dpi=300, bbox_inches='tight')
+    plt.close()
+
+    print(f"Unified grid saved to: {grid_save_path}")
+
+
+def create_ap_heatmap(all_results, datasets_list, predict_list, output_dir, size_range=(0, 16)):
+    """Создает тепловую карту AP scores для выбранного диапазона размеров"""
+
+    # Создаем матрицу AP scores
+    ap_matrix = np.zeros((len(datasets_list), len(predict_list)))
+
+    for i, dataset_name in enumerate(datasets_list):
+        for j, model_name in enumerate(predict_list):
+            key = (dataset_name, model_name)
+            if key in all_results:
+                results = all_results[key]
+                if size_range in results:
+                    ap_matrix[i, j] = results[size_range]['ap']
+                else:
+                    ap_matrix[i, j] = 0.0
+            else:
+                ap_matrix[i, j] = 0.0
+
+    # Создаем heatmap
+    fig, ax = plt.subplots(figsize=(max(8, len(predict_list) * 1.5), max(6, len(datasets_list) * 0.8)))
+
+    im = ax.imshow(ap_matrix, cmap='YlOrRd', aspect='auto', vmin=0, vmax=1)
+
+    # Добавляем аннотации
+    for i in range(len(datasets_list)):
+        for j in range(len(predict_list)):
+            text = ax.text(j, i, f'{ap_matrix[i, j]:.3f}',
+                           ha="center", va="center", color="black", fontsize=10)
+
+    # Настройки осей
+    ax.set_xticks(np.arange(len(predict_list)))
+    ax.set_yticks(np.arange(len(datasets_list)))
+    ax.set_xticklabels(predict_list, rotation=45, ha='right')
+    ax.set_yticklabels(datasets_list)
+
+    # Заголовок и цветовая шкала
+    min_size, max_size = size_range
+    size_label = f'≥{min_size}px' if max_size == float('inf') else f'{min_size}-{max_size}px'
+    ax.set_title(f'AP Scores Heatmap - Size Range: {size_label}')
+    plt.colorbar(im, ax=ax, label='Average Precision')
+
+    plt.tight_layout()
+    heatmap_save_path = os.path.join(output_dir, f'ap_heatmap_{size_label}.png')
+    plt.savefig(heatmap_save_path, dpi=300, bbox_inches='tight')
+    plt.close()
+
+    print(f"AP heatmap saved to: {heatmap_save_path}")
 
 
 def process_all_datasets_with_size_ranges(gt_pathes, pred_pathes, datasets_list, predict_list,
@@ -222,12 +328,10 @@ def process_all_datasets_with_size_ranges(gt_pathes, pred_pathes, datasets_list,
     os.makedirs(output_dir, exist_ok=True)
 
     # Определяем диапазоны размеров (в пикселях после приведения к 224x224)
-    # size_ranges = [(0, 16), (16, 32), (32, 48), (48, 64), (64, float('inf'))]
     size_ranges = [(0, 16), (16, 32), (32, 48), (48, 64), (64, float('inf'))]
-    size_ranges = [(4*i, 4*(i+1)) for i in range(7)]
-    size_ranges.append((7*4, float('inf')))
 
     ap_results = []
+    all_results = {}  # Сохраняем все результаты для создания единого полотна
 
     for i, dataset_name in enumerate(tqdm(datasets_list, desc='Datasets')):
         gt_json = json.load(open(gt_pathes[dataset_name]))
@@ -245,10 +349,16 @@ def process_all_datasets_with_size_ranges(gt_pathes, pred_pathes, datasets_list,
                 images_info = {img['id']: {'width': img['width'], 'height': img['height']}
                                for img in gt_json['images']}
                 pred_name = f"{ds_new_name} {model_name}"
-                pred_json = json.load(open(pred_pathes[pred_name]))
             else:
                 pred_name = f"{dataset_name} {model_name}"
+
+            try:
                 pred_json = json.load(open(pred_pathes[pred_name]))
+            except Exception as e:
+                print(f'Для {pred_name} не найдено пути')
+                print('!'*20)
+                print(e)
+                continue
 
             pred_annotations = pred_json['annotations']
 
@@ -256,7 +366,10 @@ def process_all_datasets_with_size_ranges(gt_pathes, pred_pathes, datasets_list,
             results = calculate_precision_recall_with_size_ranges(
                 gt_annotations, pred_annotations, images_info, iou_threshold, size_ranges)
 
-            # Сохраняем результаты
+            # Сохраняем результаты для единого полотна
+            all_results[(dataset_name, model_name)] = results
+
+            # Сохраняем результаты для CSV
             for size_range, result in results.items():
                 min_size, max_size = size_range
                 size_range_str = f"{min_size}-{max_size}" if max_size != float('inf') else f"{min_size}+"
@@ -281,6 +394,13 @@ def process_all_datasets_with_size_ranges(gt_pathes, pred_pathes, datasets_list,
             images_info = {img['id']: {'width': img['width'], 'height': img['height']}
                            for img in gt_json['images']}
 
+    # Создаем единое полотно с графиками
+    create_unified_size_ranges_grid(all_results, datasets_list, predict_list, output_dir, iou_threshold)
+
+    # Создаем тепловые карты для каждого диапазона размеров
+    for size_range in size_ranges:
+        create_ap_heatmap(all_results, datasets_list, predict_list, output_dir, size_range)
+
     # Сохраняем результаты в CSV
     df = pd.DataFrame(ap_results)
     df.to_csv(os.path.join(output_dir, 'ap_results_size_ranges.csv'), index=False)
@@ -292,7 +412,7 @@ def process_all_datasets_with_size_ranges(gt_pathes, pred_pathes, datasets_list,
                               aggfunc='first')
     pivot_df.to_csv(os.path.join(output_dir, 'ap_results_pivot.csv'))
 
-    return df
+    return df, all_results
 
 
 # Пример использования
@@ -300,12 +420,12 @@ if __name__ == "__main__":
     from label_pathes import gt_pathes, pred_pathes
 
     datasets_list = ['drones_only_FOMO_val', 'drones_only_val']
-    model_name_list = ['FOMO_56_104e']
+    model_name_list = ['FOMO_56_104e', 'FOMO_56_104e_NORESIZE', 'FOMO_bg_56_14e', 'baseline']
 
     print(model_name_list)
 
     # Запускаем обработку с анализом по размерам
-    results = process_all_datasets_with_size_ranges(
+    results, all_results = process_all_datasets_with_size_ranges(
         gt_pathes,
         pred_pathes,
         datasets_list,
@@ -314,8 +434,3 @@ if __name__ == "__main__":
     )
 
     print("Processing complete. Results saved to model_graphics_size_ranges folder.")
-    print("\nSize ranges analysis:")
-    print(" - 0-25px: Very small objects")
-    print(" - 25-50px: Small objects")
-    print(" - 50-100px: Medium objects")
-    print(" - 100+px: Large objects")

@@ -7,7 +7,7 @@ from tqdm import tqdm
 from sklearn.metrics import auc as sk_auc
 from sklearn.metrics import precision_recall_curve, average_precision_score
 
-iou_threshold = 1e-3
+iou_threshold = 1e-9
 
 def calculate_iou(box1, box2):
     """Вычисляет Intersection over Union для двух bounding box'ов"""
@@ -258,16 +258,21 @@ def process_all_datasets(gt_pathes, pred_pathes, datasets_list, predict_list, io
         ds_old_name = dataset_name
 
         for j, model_name in enumerate(tqdm(predict_list, desc='Models')):
-
             if 'mva23_val' in dataset_name and "FOMO" in model_name:
                 ds_new_name = 'mva23_val_FOMO'
                 gt_json = json.load(open(gt_pathes[ds_new_name]))
                 gt_annotations = gt_json['annotations']
                 pred_name = f"{ds_new_name} {model_name}"
-                pred_json = json.load(open(pred_pathes[pred_name]))
             else:
                 pred_name = f"{dataset_name} {model_name}"
+
+            try:
                 pred_json = json.load(open(pred_pathes[pred_name]))
+            except Exception as e:
+                print(f'Для {pred_name} не найдено пути')
+                print('!'*20)
+                print(e)
+                continue
 
             pred_annotations = pred_json['annotations']
 
@@ -295,7 +300,7 @@ def process_all_datasets(gt_pathes, pred_pathes, datasets_list, predict_list, io
             ax.set_ylabel('Precision')
             ax.set_ylim([0.0, 1.05])
             ax.set_xlim([0.0, 1.0])
-            ax.legend(loc="lower left", fontsize=32)
+            ax.legend(loc="upper right", fontsize=32)
 
             gt_json = json.load(open(gt_pathes[dataset_name]))  # Возвращаем обратно GT_labels
             gt_annotations = gt_json['annotations']
@@ -328,7 +333,7 @@ if __name__ == "__main__":
     # predict_list = ['FOMO 50e', 'FOMO 50e no_resize', 'FOMO112 50e', 'FOMO112 10e']
 
     datasets_list = ['drones_only_FOMO_val', 'drones_only_val']
-    model_name_list = ['FOMO_56_104e']
+    model_name_list = ['FOMO_56_104e','FOMO_56_104e_NORESIZE', 'FOMO_bg_56_14e', 'baseline']
     # datasets_list = ['mva23_val']
     # predict_list = ['YOLO12n 1088px']
 
