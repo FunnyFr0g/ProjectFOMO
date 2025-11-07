@@ -22,7 +22,7 @@ from PIL import Image
 #     task_name='FOMO-dronesOnly_train',
 #     tags=['FOMO'])
 
-USE_CLEARML = True
+USE_CLEARML = False
 
 if USE_CLEARML:
     Task.ignore_requirements('pywin32')
@@ -159,7 +159,13 @@ transform = A.Compose([
 class FomoBackbone(nn.Module):
     def __init__(self):
         super().__init__()
-        self.mobilenet = mobilenet_v2(pretrained=True).features[:params['trunkAt']]  # Обрезаем MobileNetV2
+
+        mobilenet = mobilenet_v2(weights=None)
+        state_dict = torch.load('models/mobilenet_v2_weights.pth', map_location='cpu')
+        mobilenet.load_state_dict(state_dict)
+        self.mobilenet = mobilenet.features[:params['trunkAt']]  # Обрезаем MobileNetV2
+
+        # self.mobilenet = mobilenet_v2(pretrained=True).features[:params['trunkAt']]  # Обрезаем MobileNetV2 | не скачиваются веса
 
     def forward(self, x):
         return self.mobilenet(x)
