@@ -2,6 +2,7 @@ from clearml import Task, Logger
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 from torchvision.models import mobilenet_v2
 from torchvision import transforms
@@ -25,14 +26,14 @@ from FOMOmodels import FomoModelResV0, FomoModelResV1
 #     task_name='FOMO-dronesOnly_train',
 #     tags=['FOMO'])
 
-USE_CLEARML = True
+USE_CLEARML = 1
 
 if USE_CLEARML:
     Task.ignore_requirements('pywin32')
     Task.add_requirements("networkx","3.4.2")
     task = Task.init(
             project_name='SmallObjectDetection',
-            task_name='FOMO_56_res_v1_background_crop_train',
+            task_name='FOMO_56_res_v1_FocalLoss_train',
             tags=['FOMO'],
             reuse_last_task_id=True
             )
@@ -237,6 +238,27 @@ def validate(model, dataloader, criterion, device):
 
     return running_loss / len(dataloader)
 
+
+class FocalLoss(nn.Module):
+    def __init__(self, alpha=1, gamma=2, reduction='mean'):
+        super(FocalLoss, self).__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+        self.reduction = reduction
+
+    def forward(self, inputs, targets):
+        ce_loss = F.cross_entropy(inputs, targets, reduction='none')
+        pt = torch.exp(-ce_loss)
+        focal_loss = self.alpha * (1 - pt) ** self.gamma * ce_loss
+
+        if self.reduction == 'mean':
+            return focal_loss.mean()
+        elif self.reduction == 'sum':
+            return focal_loss.sum()
+        else:
+            return focal_loss
+
+
 # --- 5. Основной цикл ---
 def main():
     # Загрузка данных
@@ -264,7 +286,8 @@ def main():
     # model = FomoModel(params["NUM_CLASSES"]).to(DEVICE)
     # model = FomoModelResV0(params["NUM_CLASSES"], use_residual=params['use_residual']).to(DEVICE)
     model = FomoModelResV1(params["NUM_CLASSES"], use_residual=params['use_residual']).to(DEVICE)
-    criterion = nn.CrossEntropyLoss()
+    # criterion = nn.CrossEntropyLoss()
+    criterion = FocalLoss(alpha=1, gamma=2)
     optimizer = optim.Adam(model.parameters(), lr=params["LR"])
 
     best_val_loss = float("inf")
@@ -285,7 +308,7 @@ def main():
                 title="Loss", series="Val", value=val_loss, iteration=epoch
             )
 
-        workdir = f'weights/FOMO_56_res_v1_{dataset_name}_{params["DATASET_VERSION"]}'
+        workdir = f'weights/FOMO_56_res_v1_focal {dataset_name}_{params["DATASET_VERSION"]}'
         os.makedirs(workdir, exist_ok=True)
 
         # Сохранение весов

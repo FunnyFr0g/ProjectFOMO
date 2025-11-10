@@ -524,15 +524,15 @@ def main(model=FomoModelResV0(), checkpoint_path=None, model_name='', dataset_pa
         if use_clearml:
             task.upload_artifact('bbox_images', output_dir+".zip")
 
-    result = f"'{dataset_name} {model_name}': 'r{output_json}',"
-    print('\n', result, '\n')
+    result = f"'{dataset_name} {model_name}': r'{output_json}',"
+    print('\n\t', result, '\n')
     return result
 
 if __name__ == '__main__':
     # reference_json = None
     model = FomoModelResV1()
-    checkpoint_path = r'C:\Users\ILYA\PycharmProjects\PythonProject\weights\FOMO_56_res_v1 drones_only_FOMO_1.0.2\BEST_42e.pth'
-    model_name = 'FOMO_56_42e_res_v1'
+    checkpoint_path = r'weights/FOMO_56_res_v1 drones_only_FOMO_1.0.2/150e.pth'
+    model_name = 'FOMO_56_150e_res_v1'
 
     coco_dataset = Dataset.get(dataset_name='drones_only_FOMO', dataset_project="SmallObjectDetection")
     image_path = coco_dataset.get_local_copy()

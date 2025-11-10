@@ -273,7 +273,7 @@ class FomoHeadResV1(nn.Module):
 
         # Стек residual-блоков
         self.residual_blocks = nn.Sequential(*[
-            ResidualBlock(24, expansion=8+2*n, dropout=dropout)
+            ResidualBlock(24, expansion=8+2*n, dropout=dropout) # 3 слоя последовательно расширяющихся
             for n in range(num_blocks)
         ])
 
