@@ -18,7 +18,7 @@ import time
 from clearml import Dataset as CML_Dataset
 from PIL import Image
 
-from FOMOmodels import FomoModelResV0
+from FOMOmodels import FomoModelResV0, FomoModelResV1
 
 # task = Task.init(
 #     project_name='SmallObjectDetection',
@@ -32,7 +32,7 @@ if USE_CLEARML:
     Task.add_requirements("networkx","3.4.2")
     task = Task.init(
             project_name='SmallObjectDetection',
-            task_name='FOMO_56-res-v0_background_crop_train',
+            task_name='FOMO_56_res_v1_background_crop_train',
             tags=['FOMO'],
             reuse_last_task_id=True
             )
@@ -262,7 +262,8 @@ def main():
 
     # Модель и оптимизатор
     # model = FomoModel(params["NUM_CLASSES"]).to(DEVICE)
-    model = FomoModelResV0(params["NUM_CLASSES"], use_residual=params['use_residual']).to(DEVICE)
+    # model = FomoModelResV0(params["NUM_CLASSES"], use_residual=params['use_residual']).to(DEVICE)
+    model = FomoModelResV1(params["NUM_CLASSES"], use_residual=params['use_residual']).to(DEVICE)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=params["LR"])
 
@@ -284,7 +285,7 @@ def main():
                 title="Loss", series="Val", value=val_loss, iteration=epoch
             )
 
-        workdir = f'weights/FOMO_56-res-v0_{dataset_name}_{params["DATASET_VERSION"]}'
+        workdir = f'weights/FOMO_56_res_v1_{dataset_name}_{params["DATASET_VERSION"]}'
         os.makedirs(workdir, exist_ok=True)
 
         # Сохранение весов

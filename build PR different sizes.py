@@ -420,7 +420,7 @@ if __name__ == "__main__":
     from label_pathes import gt_pathes, pred_pathes
 
     datasets_list = ['drones_only_FOMO_val', 'drones_only_val']
-    model_name_list = ['FOMO_56_104e','FOMO_56_104e_NORESIZE', 'FOMO_bg_56_14e','FOMO_56_22e_bg_crop', 'baseline', ]
+    model_name_list = ['FOMO_56_104e', 'FOMO_bg_56_14e','FOMO_56_22e_bg_crop', 'FOMO_56_35e_res_v0', 'baseline', ]
 
     print(model_name_list)
 

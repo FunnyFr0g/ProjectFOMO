@@ -254,7 +254,7 @@ class FomoHeadResV0(nn.Module):
         return x
 
 class FomoModelResV0(nn.Module):
-    def __init__(self, num_classes, use_residual=True, num_res_blocks=2):
+    def __init__(self, num_classes=2, use_residual=True, num_res_blocks=2):
         super().__init__()
         self.backbone = FomoBackbone56()
         if use_residual:
@@ -265,6 +265,58 @@ class FomoModelResV0(nn.Module):
     def forward(self, x):
         features = self.backbone(x)
         return self.head(features)
+
+
+class FomoHeadResV1(nn.Module):
+    def __init__(self, num_classes, num_blocks=3, dropout=0.1):
+        super().__init__()
+
+        # Стек residual-блоков
+        self.residual_blocks = nn.Sequential(*[
+            ResidualBlock(24, expansion=8+2*n, dropout=dropout)
+            for n in range(num_blocks)
+        ])
+
+        # Финальная классификация
+        self.final_conv = nn.Conv2d(24, num_classes, kernel_size=1)
+
+        # Инициализация весов
+        self._initialize_weights()
+
+    def _initialize_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+
+    def forward(self, x):
+        x = self.residual_blocks(x)
+
+        x = self.final_conv(x)
+        return x
+
+
+class FomoModelResV1(nn.Module):
+    def __init__(self, num_classes=2, use_residual=True, num_res_blocks=2):
+        super().__init__()
+        self.backbone = FomoBackbone56()
+        if use_residual:
+            self.head = FomoHeadResV1(num_classes, num_blocks=num_res_blocks)
+        else:
+            self.head = FomoHead56(num_classes)  # оригинальная голова
+
+    def forward(self, x):
+        features = self.backbone(x)
+        return self.head(features)
+
+
+
+
+
 
 
 # --- 3. Модель FOMO С картой 112x112 (срез на 2 слое) ---
