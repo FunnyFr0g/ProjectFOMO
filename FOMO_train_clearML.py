@@ -33,7 +33,7 @@ if USE_CLEARML:
     Task.add_requirements("networkx","3.4.2")
     task = Task.init(
             project_name='SmallObjectDetection',
-            task_name='FOMO_56_res_v1_FocalLoss_train',
+            task_name='FOMO_56_res_v0_FocalLoss_train',
             tags=['FOMO'],
             reuse_last_task_id=True
             )
@@ -284,8 +284,8 @@ def main():
 
     # Модель и оптимизатор
     # model = FomoModel(params["NUM_CLASSES"]).to(DEVICE)
-    # model = FomoModelResV0(params["NUM_CLASSES"], use_residual=params['use_residual']).to(DEVICE)
-    model = FomoModelResV1(params["NUM_CLASSES"], use_residual=params['use_residual']).to(DEVICE)
+    model = FomoModelResV0(params["NUM_CLASSES"], use_residual=params['use_residual']).to(DEVICE)
+    # model = FomoModelResV1(params["NUM_CLASSES"], use_residual=params['use_residual']).to(DEVICE)
     # criterion = nn.CrossEntropyLoss()
     criterion = FocalLoss(alpha=1, gamma=2)
     optimizer = optim.Adam(model.parameters(), lr=params["LR"])
@@ -308,7 +308,7 @@ def main():
                 title="Loss", series="Val", value=val_loss, iteration=epoch
             )
 
-        workdir = f'weights/FOMO_56_res_v1_focal {dataset_name}_{params["DATASET_VERSION"]}'
+        workdir = f'weights/FOMO_56_res_v0_focal {dataset_name}_{params["DATASET_VERSION"]}'
         os.makedirs(workdir, exist_ok=True)
 
         # Сохранение весов

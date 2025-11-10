@@ -531,8 +531,9 @@ def main(model=FomoModelResV0(), checkpoint_path=None, model_name='', dataset_pa
 if __name__ == '__main__':
     # reference_json = None
     model = FomoModelResV1()
-    checkpoint_path = r'weights/FOMO_56_res_v1 drones_only_FOMO_1.0.2/150e.pth'
-    model_name = 'FOMO_56_150e_res_v1'
+    checkpoint_path = r'weights/FOMO_56_res_v1_focal drones_only_FOMO_1.0.2/BEST_71e.pth'
+    checkpoint_path = r'weights/FOMO_56_res_v1_focal drones_only_FOMO_1.0.2/BEST_42e (1).pth'
+    model_name = 'FOMO_56_71e_res_v1_focal'
 
     coco_dataset = Dataset.get(dataset_name='drones_only_FOMO', dataset_project="SmallObjectDetection")
     image_path = coco_dataset.get_local_copy()

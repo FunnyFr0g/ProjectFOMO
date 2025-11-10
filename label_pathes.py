@@ -14,6 +14,7 @@ pred_pathes = {
     'drones_only_FOMO_val FOMO_56_35e_res_v0' : r'predictions\res-v0drones_only_FOMO!BEST_35e\annotations\predictions.json',
     'drones_only_FOMO_val FOMO_56_42e_res_v1': r'predictions\drones_only_FOMO_val!FOMO_56_42e_res_v1\annotations\predictions.json',
 	 'drones_only_FOMO_val FOMO_56_150e_res_v1': r'predictions\drones_only_FOMO_val!FOMO_56_150e_res_v1\annotations\predictions.json',
+	 'drones_only_FOMO_val FOMO_56_71e_res_v1_focal': r'predictions\drones_only_FOMO_val!FOMO_56_71e_res_v1_focal\annotations\predictions.json',
 
     'drones_only_val FOMO_bg_56_14e': r'predictions\drones_only!BEST_FOMO_56_crossEntropy_drones_only_FOMO_1.0.1_14e_model_weights\annotations\predictions_aligned.json',
     'drones_only_val FOMO_56_104e' : 'predictions/drones_only_BEST_FOMO_56_crossEntropy_dronesOnly_104e_model_weights/BEST_FOMO_56_crossEntropy_dronesOnly_104e_model_weights_predictions.json',
@@ -22,6 +23,7 @@ pred_pathes = {
     'drones_only_val FOMO_56_35e_res_v0' : r'predictions\res-v0 drones_only!BEST_35e\annotations\predictions.json',
     'drones_only_val FOMO_56_42e_res_v1': r'predictions\drones_only_val!FOMO_56_42e_res_v1\annotations\predictions.json',
 	 'drones_only_val FOMO_56_150e_res_v1': r'predictions\drones_only_val!FOMO_56_150e_res_v1\annotations\predictions.json',
+	 'drones_only_val FOMO_56_71e_res_v1_focal': r'predictions\drones_only_val!FOMO_56_71e_res_v1_focal\annotations\predictions.json',
 
 
 
