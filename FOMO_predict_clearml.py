@@ -12,7 +12,7 @@ from pycocotools import mask as maskUtils
 from clearml import Task, Dataset
 import zipfile
 from tqdm import tqdm
-from FOMOmodels import FomoModelResV0
+from FOMOmodels import FomoModelResV0, FomoModelResV1
 
 from label_pathes import gt_pathes
 
@@ -382,24 +382,41 @@ from FOMOmodels import FomoModel56, FomoModel112
 import time
 
 
-def main(model = FomoModelResV0(), draw_bbox=False, reference_json=None, dir_prefix=''):
+def main(model=FomoModelResV0(), checkpoint_path=None, model_name='', dataset_path=None, reference_json=None, dataset_name='ds', dir_prefix='', draw_bbox=False, ):
+    '''
+
+    Args:
+        model: Модель, которую нужно импортировать из FOMOmodels
+        checkpoint_path: путь к .pth файлу
+        model_name: человеческое имя модели
+        dataset_path: папка с изображениями
+        reference_json: разметка, с которой нужно синхронизировать порядко изображений
+        dataset_name: человеческое имя датасета
+        dir_prefix: префикс для итоговой папки. 'predictions/dir_prefix+f'{dataset_name}!{model_name}'
+        draw_bbox: Сохранять ли картинки с ббоксами
+
+    Returns:
+
+
+    '''
     # FomoModel(num_classes=NUM_CLASSES)
     # checkpoint_path = r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\FOMO\checkpoints\checkpoint_epoch_100.pth'
     # checkpoint_path = 'weights/BEST_FOMO_56_crossEntropy_dronesOnly_104e_model_weights.pth'
-    checkpoint_path = 'weights/FOMO_56-res-v0_drones_only_FOMO_1.0.2/BEST_35e.pth'
+    # checkpoint_path = 'weights/FOMO_56-res-v0_drones_only_FOMO_1.0.2/BEST_35e.pth'
     # checkpoint_path = 'weights/BEST_FOMO_56_crossEntropy_drones_only_FOMO_1.0.1_14e_model_weights.pth'
     # checkpoint_path = 'weights/LATEST.pth'
 
-    model_name = checkpoint_path.split('/')[-1].replace('.pth','')
+    if not model_name:
+        model_name = checkpoint_path.split('/')[-1].replace('.pth','')
 
     state_dict = torch.load(checkpoint_path)
     model.load_state_dict(state_dict)
     model.eval()
 
-    dataset_name = "drones_only"
+    # dataset_name = "drones_only"
     # coco_dataset = Dataset.get(dataset_name=dataset_name, dataset_project="SmallObjectDetection")
-    coco_dataset = Dataset.get(dataset_id='ae8c12c33b324947af9ae6379d920eb8') # drones only 1.0.5
-    dataset_path = coco_dataset.get_local_copy()
+    # coco_dataset = Dataset.get(dataset_id='ae8c12c33b324947af9ae6379d920eb8') # drones only 1.0.5
+    # dataset_path = coco_dataset.get_local_copy()
     img_dir = f"{dataset_path}/val/images"
     if not os.path.exists(img_dir):
         img_dir = f"{dataset_path}/images/val"
@@ -413,7 +430,7 @@ def main(model = FomoModelResV0(), draw_bbox=False, reference_json=None, dir_pre
     # img_dir = f"{dataset_path}/images/val"
 
     output_dir = os.path.join('predictions', dir_prefix +f'{dataset_name}!{model_name}')
-    output_json = os.path.join(output_dir,'annotations', 'predictions.json')
+    output_json = os.path.join(output_dir, 'annotations', 'predictions.json')
     os.makedirs(os.path.dirname(output_json), exist_ok=True)
 
     all_annotations = []
@@ -421,7 +438,6 @@ def main(model = FomoModelResV0(), draw_bbox=False, reference_json=None, dir_pre
     image_id = 0
 
     start_time = time.time()
-
 
     # Если указан эталонный JSON, загружаем маппинг filename -> image_id
     filename_to_id = {}
@@ -508,10 +524,33 @@ def main(model = FomoModelResV0(), draw_bbox=False, reference_json=None, dir_pre
         if use_clearml:
             task.upload_artifact('bbox_images', output_dir+".zip")
 
+    result = f"'{dataset_name} {model_name}': 'r{output_json}',"
+    print('\n', result, '\n')
+    return result
 
 if __name__ == '__main__':
     # reference_json = None
+    model = FomoModelResV1()
+    checkpoint_path = r'C:\Users\ILYA\PycharmProjects\PythonProject\weights\FOMO_56_res_v1 drones_only_FOMO_1.0.2\BEST_42e.pth'
+    model_name = 'FOMO_56_42e_res_v1'
+
+    coco_dataset = Dataset.get(dataset_name='drones_only_FOMO', dataset_project="SmallObjectDetection")
+    image_path = coco_dataset.get_local_copy()
+    reference_json = gt_pathes['drones_only_FOMO_val']
+    dataset_name = 'drones_only_FOMO_val'
+
+    main(model=model, checkpoint_path=checkpoint_path, model_name=model_name,
+         dataset_path=image_path, reference_json=reference_json, dataset_name=dataset_name, draw_bbox=False)
+
+    coco_dataset = Dataset.get(dataset_id='ae8c12c33b324947af9ae6379d920eb8')  # drones only 1.0.5
+    image_path = coco_dataset.get_local_copy()
     reference_json = 'GTlabels/ae8c12c33b324947af9ae6379d920eb8/coco_annotations_val.json'
-    # reference_json = gt_pathes['drones_only_FOMO_val']
-    main(draw_bbox=False, reference_json=reference_json, dir_prefix='res-v0 ')
+    dataset_name = 'drones_only_val'
+
+    main(model=model, checkpoint_path=checkpoint_path, model_name=model_name,
+         dataset_path=image_path, reference_json=reference_json, dataset_name=dataset_name, draw_bbox=False)
+
+
+
+
 
