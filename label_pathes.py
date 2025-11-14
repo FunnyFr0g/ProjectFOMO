@@ -12,6 +12,7 @@ pred_pathes = {
     'drones_only_FOMO_val FOMO_bg_56_14e': r'predictions/drones_only_FOMO_BEST_FOMO_56_crossEntropy_drones_only_FOMO_1.0.1_14e_model_weights/annotations/predictions_aligned.json',
     'drones_only_FOMO_val FOMO_56_22e_bg_crop' : r'predictions/drones_only_FOMO!BEST_22e/annotations/predictions.json',
     'drones_only_FOMO_val FOMO_56_35e_res_v0' : r'predictions\res-v0drones_only_FOMO!BEST_35e\annotations\predictions.json',
+	 'drones_only_FOMO_val FOMO_56_42e_res_v0_focal': r'predictions\drones_only_FOMO_val!FOMO_56_42e_res_v0_focal\annotations\predictions.json',
     'drones_only_FOMO_val FOMO_56_42e_res_v1': r'predictions\drones_only_FOMO_val!FOMO_56_42e_res_v1\annotations\predictions.json',
 	 'drones_only_FOMO_val FOMO_56_150e_res_v1': r'predictions\drones_only_FOMO_val!FOMO_56_150e_res_v1\annotations\predictions.json',
 	 'drones_only_FOMO_val FOMO_56_71e_res_v1_focal': r'predictions\drones_only_FOMO_val!FOMO_56_71e_res_v1_focal\annotations\predictions.json',
@@ -21,9 +22,12 @@ pred_pathes = {
     'drones_only_val FOMO_56_104e_NORESIZE' : r'predictions\NORESIZE_drones_only!BEST_FOMO_56_crossEntropy_dronesOnly_104e_model_weights\annotations\predictions.json',
     'drones_only_val FOMO_56_22e_bg_crop' : r'predictions/drones_only!BEST_22e/annotations/predictions.json',
     'drones_only_val FOMO_56_35e_res_v0' : r'predictions\res-v0 drones_only!BEST_35e\annotations\predictions.json',
+	 'drones_only_val FOMO_56_42e_res_v0_focal': r'predictions\drones_only_val!FOMO_56_42e_res_v0_focal\annotations\predictions.json',
     'drones_only_val FOMO_56_42e_res_v1': r'predictions\drones_only_val!FOMO_56_42e_res_v1\annotations\predictions.json',
 	 'drones_only_val FOMO_56_150e_res_v1': r'predictions\drones_only_val!FOMO_56_150e_res_v1\annotations\predictions.json',
 	 'drones_only_val FOMO_56_71e_res_v1_focal': r'predictions\drones_only_val!FOMO_56_71e_res_v1_focal\annotations\predictions.json',
+	 'drones_only_val FOMO_56_42e_res_v1_focal': r'predictions\drones_only_val!FOMO_56_42e_res_v1_focal\annotations\predictions.json',
+	 'drones_only_FOMO_val FOMO_56_42e_res_v1_focal': r'predictions\drones_only_FOMO_val!FOMO_56_42e_res_v1_focal\annotations\predictions.json',
 
 
 

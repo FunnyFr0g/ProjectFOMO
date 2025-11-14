@@ -33,7 +33,7 @@ if USE_CLEARML:
     Task.add_requirements("networkx","3.4.2")
     task = Task.init(
             project_name='SmallObjectDetection',
-            task_name='FOMO_56_res_v0_FocalLoss_train',
+            task_name='FOMO_56_res_v0_FocalLoss_ReduceLROnPlateau train',
             tags=['FOMO'],
             reuse_last_task_id=True
             )
@@ -68,6 +68,7 @@ params = {
     'BATCH_SIZE' : 64,
     "EPOCHS" : 150,
     "LR" : 1e-3,
+    "scheduler" : 'ReduceLROnPlateau',
     "trunkAt" : 4, # Номер слоя, где обрезать MobileNet. Для карты размером 56 это значение 4
     "use_residual" : True,
     "NUM_WORKERS" : 1,
@@ -290,6 +291,17 @@ def main():
     criterion = FocalLoss(alpha=1, gamma=2)
     optimizer = optim.Adam(model.parameters(), lr=params["LR"])
 
+    if params['scheduler'] == 'ReduceLROnPlateau':
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer,
+            mode='min',  # Следим за минимизацией loss
+            factor=0.5,  # Умножаем LR на 0.5
+            patience=5,  # Ждем 10 эпох без улучшения
+            min_lr=1e-6  # Минимальный LR
+        )
+
+
+
     best_val_loss = float("inf")
 
     # Обучение
@@ -297,6 +309,9 @@ def main():
         epoch_start_time = time.time()
         train_loss = train(model, train_loader, criterion, optimizer, DEVICE)
         val_loss = validate(model, val_loader, criterion, DEVICE)
+        if params['use_scheduler'] == 'ReduceLROnPlateau':
+            scheduler.step(val_loss)
+
         print(f"Epoch {epoch+1}/{params['EPOCHS']}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
 
         # Логирование метрик
@@ -308,7 +323,7 @@ def main():
                 title="Loss", series="Val", value=val_loss, iteration=epoch
             )
 
-        workdir = f'weights/FOMO_56_res_v0_focal {dataset_name}_{params["DATASET_VERSION"]}'
+        workdir = f'weights/FOMO_56_res_v0_focal_ReduceLROnPlateau {dataset_name}_{params["DATASET_VERSION"]}'
         os.makedirs(workdir, exist_ok=True)
 
         # Сохранение весов
@@ -319,8 +334,6 @@ def main():
         if val_loss < best_val_loss:
             best_val_loss = val_loss
             torch.save(model.state_dict(), os.path.join(workdir, f'BEST_{epoch}e.pth'))
-
-
 
 
 

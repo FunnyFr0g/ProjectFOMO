@@ -479,12 +479,43 @@ def main(model=FomoModelResV0(), checkpoint_path=None, model_name='', dataset_pa
             # print(f'{pred_mask.shape=}')
 
 
+
             import matplotlib.pyplot as plt
-            # if image_id == 34:
-            #     print(pred_mask.shape)
-            #     print(pred_mask)
-            #     plt.imshow(pred_mask)
-            #     plt.show()
+            if pred_mask.any():
+                source_img = plt.imread(img_path)
+                prep_image = image_tensor[0].permute(1, 2, 0).cpu().numpy()
+                heatmap = probs[1]
+
+                fig, axes = plt.subplots(1, 4, figsize=(15, 5))
+
+                axes[0].imshow(source_img)
+                axes[0].set_title('Исходное изображение')
+                axes[1].imshow(prep_image,)
+                axes[1].set_title("Подготовленное изображение")
+                axes[2].imshow(heatmap,)
+                axes[2].set_title("Heatmap")
+                axes[3].imshow(pred_mask, cmap='gray')
+                axes[3].set_title("Mask")
+
+
+                # plt.figure(1)
+                # plt.imshow(source_img)
+                #
+
+                # plt.figure(2)
+                # plt.imshow(heatmap)
+                #
+                # plt.figure(3)
+                # plt.imshow(pred_mask, cmap='gray')
+
+                print(f'{image_id=}')
+                print(f'{img_path=}')
+                print(pred_mask.shape)
+                print(pred_mask)
+
+                plt.show()
+
+
 
         # Создаем запись об изображении
         image_info = {
@@ -530,18 +561,19 @@ def main(model=FomoModelResV0(), checkpoint_path=None, model_name='', dataset_pa
 
 if __name__ == '__main__':
     # reference_json = None
-    model = FomoModelResV1()
-    checkpoint_path = r'weights/FOMO_56_res_v1_focal drones_only_FOMO_1.0.2/BEST_71e.pth'
-    checkpoint_path = r'weights/FOMO_56_res_v1_focal drones_only_FOMO_1.0.2/BEST_42e (1).pth'
-    model_name = 'FOMO_56_71e_res_v1_focal'
+    model = FomoModelResV0()
+    # checkpoint_path = r'weights/FOMO_56_res_v1_focal drones_only_FOMO_1.0.2/BEST_71e.pth'
+    # checkpoint_path = r'weights/FOMO_56_res_v1_focal drones_only_FOMO_1.0.2/BEST_42e (1).pth'
+    checkpoint_path = r'weights/FOMO_56_res_v0_focal drones_only_FOMO_1.0.2/BEST_49e.pth'
+    model_name = 'FOMO_56_42e_res_v0_focal'
 
     coco_dataset = Dataset.get(dataset_name='drones_only_FOMO', dataset_project="SmallObjectDetection")
     image_path = coco_dataset.get_local_copy()
     reference_json = gt_pathes['drones_only_FOMO_val']
     dataset_name = 'drones_only_FOMO_val'
 
-    main(model=model, checkpoint_path=checkpoint_path, model_name=model_name,
-         dataset_path=image_path, reference_json=reference_json, dataset_name=dataset_name, draw_bbox=False)
+    # main(model=model, checkpoint_path=checkpoint_path, model_name=model_name,
+    #      dataset_path=image_path, reference_json=reference_json, dataset_name=dataset_name, draw_bbox=False)
 
     coco_dataset = Dataset.get(dataset_id='ae8c12c33b324947af9ae6379d920eb8')  # drones only 1.0.5
     image_path = coco_dataset.get_local_copy()

@@ -142,21 +142,31 @@ def calculate_iou(box1, box2):
 #     return precision, recall, ap
 
 
-def calculate_precision_recall(gt_annotations, pred_annotations, iou_threshold=0.5):
+def calculate_precision_recall(gt_annotations, pred_annotations, iou_threshold=0.5, move_score=False):
     """Вычисляет Precision-Recall кривую и AP"""
     pred_boxes = {}
     gt_boxes = {}
 
+    min_score = float('inf')
+    max_score = float('-inf')
+
     for pred in pred_annotations:
         image_id = pred['image_id']
+        score = (pred['score']-0.5)*2 if move_score else pred['score'] # переводит score из [0.5; 1] -> [0;1]
+        if score < min_score:
+            min_score = score
+        if score > max_score:
+            max_score = score
         if image_id not in pred_boxes:
             pred_boxes[image_id] = []
         pred_boxes[image_id].append({
             'bbox': pred['bbox'],
-            'score': pred['score'],
+            'score': score,
             'category_id': pred['category_id'],
             'matched': False
         })
+
+    print(f'{min_score=}, {max_score=}')
 
     for gt in gt_annotations:
         image_id = gt['image_id']
@@ -239,7 +249,7 @@ def plot_precision_recall_curve(precision, recall, ap, title, save_path):
 
 
 def process_all_datasets(gt_pathes, pred_pathes, datasets_list, predict_list, iou_threshold=0.5,
-                         output_dir='model_graphics'):
+                         output_dir='model_graphics', move_score=False):
     """Обрабатывает все датасеты и модели"""
     os.makedirs(output_dir, exist_ok=True)
 
@@ -277,7 +287,7 @@ def process_all_datasets(gt_pathes, pred_pathes, datasets_list, predict_list, io
             pred_annotations = pred_json['annotations']
 
             precision, recall, ap = calculate_precision_recall(
-                gt_annotations, pred_annotations, iou_threshold)
+                gt_annotations, pred_annotations, iou_threshold, move_score)
 
             # Сохраняем результаты
             ap_results.append({
@@ -334,8 +344,10 @@ if __name__ == "__main__":
 
     datasets_list = ['drones_only_FOMO_val', 'drones_only_val']
     # model_name_list = ['FOMO_56_104e','FOMO_56_104e_NORESIZE', 'FOMO_bg_56_14e','FOMO_56_22e_bg_crop', 'FOMO_56_35e_res_v0', 'baseline', ]
-    model_name_list = ['FOMO_56_104e', 'FOMO_bg_56_14e','FOMO_56_22e_bg_crop', 'FOMO_56_35e_res_v0',
-                       'FOMO_56_42e_res_v1', 'FOMO_56_150e_res_v1', 'FOMO_56_71e_res_v1_focal', 'baseline', ]
+    # model_name_list = ['FOMO_56_104e', 'FOMO_bg_56_14e','FOMO_56_22e_bg_crop', 'FOMO_56_35e_res_v0',
+    #                    'FOMO_56_42e_res_v1', 'FOMO_56_150e_res_v1', 'FOMO_56_42e_res_v1_focal','FOMO_56_71e_res_v1_focal', 'baseline', ]
+    model_name_list = ['FOMO_56_104e', 'FOMO_bg_56_14e','FOMO_56_22e_bg_crop', 'FOMO_56_35e_res_v0', 'FOMO_56_42e_res_v0_focal',
+                       'FOMO_56_42e_res_v1', 'FOMO_56_150e_res_v1', 'FOMO_56_42e_res_v1_focal','FOMO_56_71e_res_v1_focal', 'baseline', ]
     # datasets_list = ['mva23_val']
     # predict_list = ['YOLO12n 1088px']
 
@@ -349,7 +361,8 @@ if __name__ == "__main__":
         pred_pathes,
         datasets_list,
         model_name_list,
-        iou_threshold
+        iou_threshold,
+        move_score=True
     )
 
     print("Processing complete. Results saved to model_graphics folder.")
