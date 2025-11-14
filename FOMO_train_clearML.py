@@ -309,7 +309,7 @@ def main():
         epoch_start_time = time.time()
         train_loss = train(model, train_loader, criterion, optimizer, DEVICE)
         val_loss = validate(model, val_loader, criterion, DEVICE)
-        if params['use_scheduler'] == 'ReduceLROnPlateau':
+        if params['scheduler'] == 'ReduceLROnPlateau':
             scheduler.step(val_loss)
 
         print(f"Epoch {epoch+1}/{params['EPOCHS']}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}")
