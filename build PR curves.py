@@ -352,12 +352,12 @@ if __name__ == "__main__":
     # datasets_list = ['skb_test']
     # predict_list = ['FOMO 50e', 'FOMO 50e no_resize', 'FOMO112 50e', 'FOMO112 10e']
 
-    datasets_list = ['drones_only_FOMO_val', 'drones_only_val', 'vid1_drone', 'skb_test']
+    datasets_list = ['drones_only_FOMO_val', 'drones_only_val', 'vid1_drone', 'skb_test', 'skb_test_nobird']
     # model_name_list = ['FOMO_56_104e','FOMO_56_104e_NORESIZE', 'FOMO_bg_56_14e','FOMO_56_22e_bg_crop', 'FOMO_56_35e_res_v0', 'baseline', ]
     # model_name_list = ['FOMO_56_104e', 'FOMO_bg_56_14e','FOMO_56_22e_bg_crop', 'FOMO_56_35e_res_v0',
     #                    'FOMO_56_42e_res_v1', 'FOMO_56_150e_res_v1', 'FOMO_56_42e_res_v1_focal','FOMO_56_71e_res_v1_focal', 'baseline', ]
     model_name_list = ['FOMO_56_104e', 'FOMO_bg_56_14e','FOMO_56_22e_bg_crop', 'FOMO_56_35e_res_v0', 'FOMO_56_42e_res_v0_focal',
-                       'FOMO_56_42e_res_v1', 'FOMO_56_150e_res_v1', 'FOMO_56_42e_res_v1_focal','FOMO_56_71e_res_v1_focal', 'baseline', ]
+                       'FOMO_56_42e_res_v1', 'FOMO_56_150e_res_v1', 'FOMO_56_42e_res_v1_focal','FOMO_56_71e_res_v1_focal', 'baseline']
     # datasets_list = ['mva23_val']
     # predict_list = ['YOLO12n 1088px']
 

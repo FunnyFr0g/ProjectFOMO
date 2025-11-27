@@ -492,12 +492,12 @@ def main(model=FomoModelResV0(), checkpoint_path=None, model_name='', dataset_pa
 
             axes[0].imshow(source_img)
             axes[0].set_title('Исходное изображение')
-            axes[1].imshow(prep_image,)
-            axes[1].set_title("Подготовленное изображение")
-            axes[2].imshow(heatmap,)
-            axes[2].set_title("Heatmap")
-            axes[3].imshow(pred_mask, cmap='gray')
-            axes[3].set_title("Mask")
+            # axes[1].imshow(prep_image,)
+            # axes[1].set_title("Подготовленное изображение")
+            axes[1].imshow(heatmap,)
+            axes[1].set_title("Heatmap")
+            axes[2].imshow(pred_mask, cmap='gray')
+            axes[2].set_title("Mask")
 
 
             # plt.figure(1)
@@ -517,7 +517,7 @@ def main(model=FomoModelResV0(), checkpoint_path=None, model_name='', dataset_pa
 
             plt.show()
 
-        if False and pred_mask.any():
+        if 0 and pred_mask.any():
             show_mask()
 
 
@@ -545,12 +545,12 @@ def main(model=FomoModelResV0(), checkpoint_path=None, model_name='', dataset_pa
 
     elapsed_time = end_time - start_time
 
-    print(elapsed_time)
-    print(elapsed_time/image_id)
+    # print(elapsed_time)
+    # print(elapsed_time/image_id)
 
     # Сохраняем результаты
     save_to_coco_format(all_images, all_annotations, output_json)
-    print(f"Predictions saved to {output_json}")
+    # print(f"Predictions saved to {output_json}")
 
     if use_clearml:
         task.upload_artifact('predictions.json', output_json)
@@ -564,7 +564,115 @@ def main(model=FomoModelResV0(), checkpoint_path=None, model_name='', dataset_pa
     print('\n\t', result, '\n')
     return result
 
+class TrainedFomo:
+    def __init__(self, model, checkpoint, model_name):
+        self.model = model()
+        self.checkpoint = checkpoint
+        self.model_name = model_name
+
+
+base = TrainedFomo(
+    model=FomoModel56,
+    checkpoint=r'weights/BEST_FOMO_56_crossEntropy_dronesOnly_104e_model_weights.pth',
+    model_name='FOMO_56_104e'
+)
+
+bg = TrainedFomo(
+    model=FomoModel56,
+    checkpoint='weights/BEST_FOMO_56_crossEntropy_drones_only_FOMO_1.0.1_14e_model_weights.pth',
+    model_name='FOMO_bg_56_14e'
+)
+
+bg_crop = TrainedFomo(
+    model=FomoModel56,
+    checkpoint='weights/FOMO_56_bg_crop_drones_only_FOMO_1.0.2/BEST_22e.pth',
+    model_name='FOMO_56_22e_bg_crop'
+)
+
+res_v0 = TrainedFomo(
+    model=FomoModelResV0,
+    checkpoint='weights/FOMO_56-res-v0_drones_only_FOMO_1.0.2/BEST_35e.pth',
+    model_name='FOMO_56_35e_res_v0'
+)
+
+res_v0_focal = TrainedFomo(
+    model=FomoModelResV0,
+    checkpoint='weights/FOMO_56_res_v0_focal drones_only_FOMO_1.0.2/BEST_49e.pth',
+    model_name='FOMO_56_42e_res_v0_focal'
+)
+
+res_v1 = TrainedFomo(
+    model=FomoModelResV1,
+    checkpoint='weights/FOMO_56_res_v1 drones_only_FOMO_1.0.2/BEST_42e.pth',
+    model_name='FOMO_56_42e_res_v1'
+)
+
+res_v1_focal = TrainedFomo(
+    model=FomoModelResV1,
+    checkpoint='weights/FOMO_56_res_v1_focal drones_only_FOMO_1.0.2/BEST_71e.pth',
+    model_name='FOMO_56_71e_res_v1_focal'
+)
+
+class MyDataset:
+    def __init__(self, name, image_path, reference_json):
+        self.name = name
+        self.image_path = image_path
+        self.reference_json = reference_json
+
+drones_only_FOMO_val = MyDataset(
+    image_path=Dataset.get(dataset_name='drones_only_FOMO', dataset_project="SmallObjectDetection").get_local_copy(),
+    reference_json = gt_pathes['drones_only_FOMO_val'],
+    name='drones_only_FOMO_val'
+)
+
+drones_only_val = MyDataset(
+    image_path=Dataset.get(dataset_id='ae8c12c33b324947af9ae6379d920eb8').get_local_copy(),  # drones only 1.0.5
+    reference_json = 'GTlabels/ae8c12c33b324947af9ae6379d920eb8/coco_annotations_val.json',
+    name='drones_only_val',
+)
+
+vid1_drone = MyDataset(
+    image_path = r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\data\vid1\images', #vid 1 drone
+    reference_json = r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\data\vid1\labels_drone\annotations\drone_annotations.json',
+    name='vid1_drone',
+)
+
+
+skb_test = MyDataset(
+    name='skb_test',
+    image_path=r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\data\skb_test\images', # skb_test
+    reference_json = r'GTlabels/skb_test/skb_test.json'
+)
+
+skb_test_nobird = MyDataset(
+    image_path=r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\data\skb_test_nobird\images',  # skb_test_nobird
+    reference_json = r'GTlabels/skb_test_nobird/annotations.json',
+    name='skb_test_nobird'
+)
+
+
+
+
 if __name__ == '__main__':
+
+    models = [base, bg, bg_crop, res_v0, res_v0_focal, res_v1, res_v1_focal]
+    # datasets = [drones_only_FOMO_val, drones_only_val, vid1_drone,skb_test, skb_test_nobird]
+    datasets = [ vid1_drone, skb_test, skb_test_nobird]
+
+    for dataset in datasets:
+        for trained_model in models:
+            main(model=trained_model.model,
+                 checkpoint_path=trained_model.checkpoint,
+                 model_name=trained_model.model_name,
+                 dataset_path=dataset.image_path,
+                 reference_json=dataset.reference_json,
+                 dataset_name=dataset.name,
+
+                 draw_bbox=False)
+
+    input("Press Enter to continue...")
+    exit(0)
+
     # reference_json = None
     model = FomoModelResV0()
     # checkpoint_path = r'weights/FOMO_56_res_v1_focal drones_only_FOMO_1.0.2/BEST_71e.pth'
@@ -572,9 +680,10 @@ if __name__ == '__main__':
     checkpoint_path = r'weights/FOMO_56_res_v0_focal drones_only_FOMO_1.0.2/BEST_49e.pth'
     model_name = 'FOMO_56_42e_res_v0_focal'
 
-    model = FomoModel56() # Дефолтная FOMO
-    checkpoint_path = r'weights/BEST_FOMO_56_crossEntropy_dronesOnly_104e_model_weights.pth'
-    model_name = 'FOMO_56_104e'
+    # model = FomoModel56() # Дефолтная FOMO
+    # checkpoint_path = r'weights/BEST_FOMO_56_crossEntropy_dronesOnly_104e_model_weights.pth'
+    # model_name = 'FOMO_56_104e'
+
 
     # coco_dataset = Dataset.get(dataset_name='drones_only_FOMO', dataset_project="SmallObjectDetection")
     # image_path = coco_dataset.get_local_copy()
@@ -593,9 +702,13 @@ if __name__ == '__main__':
     # reference_json = r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\data\vid1\labels_drone\annotations\drone_annotations.json'
     # dataset_name = 'vid1_drone'
 
-    image_path = r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\data\skb_test\images' # skb_test
-    reference_json = r'GTlabels/skb_test/skb_test.json'
-    dataset_name = 'skb_test'
+    # image_path = r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\data\skb_test\images' # skb_test
+    # reference_json = r'GTlabels/skb_test/skb_test.json'
+    # dataset_name = 'skb_test'
+
+    image_path = r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\data\skb_test_nobird\images' # skb_test_nobird
+    reference_json = r'GTlabels/skb_test_nobird/annotations.json'
+    dataset_name = 'skb_test_nobird'
 
     main(model=model, checkpoint_path=checkpoint_path, model_name=model_name,
          dataset_path=image_path, reference_json=reference_json, dataset_name=dataset_name, draw_bbox=False)

@@ -7,6 +7,7 @@ gt_pathes = {
     'mva23_val':r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\data\mva2023_sod4bird_train\val\mva23_val_UPDATED.json',
     'vid1_drone': r'GTlabels/vid1_drone/drone_annotations.json',
     'skb_test' : r'GTlabels/skb_test/skb_test.json',
+    'skb_test_nobird' : r'GTlabels/skb_test_nobird/annotations.json',
 }
 
 pred_pathes = {
@@ -18,6 +19,7 @@ pred_pathes = {
     'drones_only_FOMO_val FOMO_56_42e_res_v1': r'predictions\drones_only_FOMO_val!FOMO_56_42e_res_v1\annotations\predictions.json',
 	 'drones_only_FOMO_val FOMO_56_150e_res_v1': r'predictions\drones_only_FOMO_val!FOMO_56_150e_res_v1\annotations\predictions.json',
 	 'drones_only_FOMO_val FOMO_56_71e_res_v1_focal': r'predictions\drones_only_FOMO_val!FOMO_56_71e_res_v1_focal\annotations\predictions.json',
+	 'drones_only_FOMO_val FOMO_56_42e_res_v1_focal': r'predictions\drones_only_FOMO_val!FOMO_56_42e_res_v1_focal\annotations\predictions.json',
 
     'drones_only_val FOMO_bg_56_14e': r'predictions\drones_only!BEST_FOMO_56_crossEntropy_drones_only_FOMO_1.0.1_14e_model_weights\annotations\predictions_aligned.json',
     'drones_only_val FOMO_56_104e' : 'predictions/drones_only_BEST_FOMO_56_crossEntropy_dronesOnly_104e_model_weights/BEST_FOMO_56_crossEntropy_dronesOnly_104e_model_weights_predictions.json',
@@ -29,14 +31,32 @@ pred_pathes = {
 	 'drones_only_val FOMO_56_150e_res_v1': r'predictions\drones_only_val!FOMO_56_150e_res_v1\annotations\predictions.json',
 	 'drones_only_val FOMO_56_71e_res_v1_focal': r'predictions\drones_only_val!FOMO_56_71e_res_v1_focal\annotations\predictions.json',
 	 'drones_only_val FOMO_56_42e_res_v1_focal': r'predictions\drones_only_val!FOMO_56_42e_res_v1_focal\annotations\predictions.json',
-	 'drones_only_FOMO_val FOMO_56_42e_res_v1_focal': r'predictions\drones_only_FOMO_val!FOMO_56_42e_res_v1_focal\annotations\predictions.json',
 
     'vid1_drone FOMO_56_104e': r'predictions\vid1_drone!FOMO_56_104e\annotations\predictions.json',
+	 'vid1_drone FOMO_bg_56_14e': r'predictions\vid1_drone!FOMO_bg_56_14e\annotations\predictions.json',
+	 'vid1_drone FOMO_56_22e_bg_crop': r'predictions\vid1_drone!FOMO_56_22e_bg_crop\annotations\predictions.json',
+	 'vid1_drone FOMO_56_35e_res_v0': r'predictions\vid1_drone!FOMO_56_35e_res_v0\annotations\predictions.json',
     'vid1_drone FOMO_56_42e_res_v0_focal': r'predictions\vid1_drone!FOMO_56_42e_res_v0_focal\annotations\predictions.json',
+	 'vid1_drone FOMO_56_42e_res_v1': r'predictions\vid1_drone!FOMO_56_42e_res_v1\annotations\predictions.json',
+	 'vid1_drone FOMO_56_71e_res_v1_focal': r'predictions\vid1_drone!FOMO_56_71e_res_v1_focal\annotations\predictions.json',
 
     'skb_test FOMO_56_104e': r'predictions\skb_test!FOMO_56_104e\annotations\predictions.json',
-    'skb_test FOMO_56_42e_res_v0_focal': r'predictions\skb_test!FOMO_56_42e_res_v0_focal\annotations\predictions.json',
+	 'skb_test FOMO_bg_56_14e': r'predictions\skb_test!FOMO_bg_56_14e\annotations\predictions.json',
+	 'skb_test FOMO_56_22e_bg_crop': r'predictions\skb_test!FOMO_56_22e_bg_crop\annotations\predictions.json',
+	 'skb_test FOMO_56_35e_res_v0': r'predictions\skb_test!FOMO_56_35e_res_v0\annotations\predictions.json',
+	 'skb_test FOMO_56_42e_res_v0_focal': r'predictions\skb_test!FOMO_56_42e_res_v0_focal\annotations\predictions.json',
+	 'skb_test FOMO_56_42e_res_v1': r'predictions\skb_test!FOMO_56_42e_res_v1\annotations\predictions.json',
+	 'skb_test FOMO_56_71e_res_v1_focal': r'predictions\skb_test!FOMO_56_71e_res_v1_focal\annotations\predictions.json',
 
+    'skb_test_nobird FOMO_56_104e': r'predictions\skb_test_nobird!FOMO_56_104e\annotations\predictions.json',
+	 'skb_test_nobird FOMO_bg_56_14e': r'predictions\skb_test_nobird!FOMO_bg_56_14e\annotations\predictions.json',
+	 'skb_test_nobird FOMO_56_22e_bg_crop': r'predictions\skb_test_nobird!FOMO_56_22e_bg_crop\annotations\predictions.json',
+	 'skb_test_nobird FOMO_56_35e_res_v0': r'predictions\skb_test_nobird!FOMO_56_35e_res_v0\annotations\predictions.json',
+	 'skb_test_nobird FOMO_56_42e_res_v0_focal': r'predictions\skb_test_nobird!FOMO_56_42e_res_v0_focal\annotations\predictions.json',
+	 'skb_test_nobird FOMO_56_42e_res_v1': r'predictions\skb_test_nobird!FOMO_56_42e_res_v1\annotations\predictions.json',
+	 'skb_test_nobird FOMO_56_71e_res_v1_focal': r'predictions\skb_test_nobird!FOMO_56_71e_res_v1_focal\annotations\predictions.json',
+
+	 'skb_test_nobird FOMO_56_42e_res_v0_focal_894p': r'predictions\skb_test_nobird!FOMO_56_42e_res_v0_focal_894p\annotations\predictions.json',
 
 
     'drones_only_val baseline' : 'predictions/baseline/baseline_dronesonly_val.json',

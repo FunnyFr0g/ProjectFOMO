@@ -168,8 +168,8 @@ if __name__ == "__main__":
     # coco_json = pred_pathes['vid1_drone FOMO_56_42e_res_v0_focal']
 
 
-    image_folder = r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\data\skb_test\images'
-    coco_json = gt_pathes['skb_test']
+    image_folder = r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\data\skb_test_nobird\images'
+    coco_json = gt_pathes['skb_test_nobird']
 
 
 
