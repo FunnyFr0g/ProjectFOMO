@@ -2,6 +2,7 @@ import os
 import json
 import cv2
 import numpy as np
+from sympy import false
 from torchvision import transforms
 import torch
 from torchvision.models import mobilenet_v2
@@ -12,7 +13,8 @@ from pycocotools import mask as maskUtils
 from clearml import Task, Dataset
 import zipfile
 from tqdm import tqdm
-from FOMOmodels import FomoModelResV0, FomoModelResV1
+import matplotlib.pyplot as plt
+from FOMOmodels import FomoModelResV0, FomoModelResV1, FomoModel56
 
 from label_pathes import gt_pathes
 
@@ -421,6 +423,8 @@ def main(model=FomoModelResV0(), checkpoint_path=None, model_name='', dataset_pa
     if not os.path.exists(img_dir):
         img_dir = f"{dataset_path}/images/val"
     if not os.path.exists(img_dir):
+        img_dir = dataset_path # Случай, когда папка с изображениями указывается напрямую
+    if not os.path.exists(img_dir):
         raise Exception('Неверный путь к изображениям', img_dir)
 
     #
@@ -479,41 +483,42 @@ def main(model=FomoModelResV0(), checkpoint_path=None, model_name='', dataset_pa
             # print(f'{pred_mask.shape=}')
 
 
+        def show_mask():
+            source_img = plt.imread(img_path)
+            prep_image = image_tensor[0].permute(1, 2, 0).cpu().numpy()
+            heatmap = probs[1]
 
-            import matplotlib.pyplot as plt
-            if pred_mask.any():
-                source_img = plt.imread(img_path)
-                prep_image = image_tensor[0].permute(1, 2, 0).cpu().numpy()
-                heatmap = probs[1]
+            fig, axes = plt.subplots(1, 4, figsize=(15, 5))
 
-                fig, axes = plt.subplots(1, 4, figsize=(15, 5))
-
-                axes[0].imshow(source_img)
-                axes[0].set_title('Исходное изображение')
-                axes[1].imshow(prep_image,)
-                axes[1].set_title("Подготовленное изображение")
-                axes[2].imshow(heatmap,)
-                axes[2].set_title("Heatmap")
-                axes[3].imshow(pred_mask, cmap='gray')
-                axes[3].set_title("Mask")
+            axes[0].imshow(source_img)
+            axes[0].set_title('Исходное изображение')
+            axes[1].imshow(prep_image,)
+            axes[1].set_title("Подготовленное изображение")
+            axes[2].imshow(heatmap,)
+            axes[2].set_title("Heatmap")
+            axes[3].imshow(pred_mask, cmap='gray')
+            axes[3].set_title("Mask")
 
 
-                # plt.figure(1)
-                # plt.imshow(source_img)
-                #
+            # plt.figure(1)
+            # plt.imshow(source_img)
+            #
 
-                # plt.figure(2)
-                # plt.imshow(heatmap)
-                #
-                # plt.figure(3)
-                # plt.imshow(pred_mask, cmap='gray')
+            # plt.figure(2)
+            # plt.imshow(heatmap)
+            #
+            # plt.figure(3)
+            # plt.imshow(pred_mask, cmap='gray')
 
-                print(f'{image_id=}')
-                print(f'{img_path=}')
-                print(pred_mask.shape)
-                print(pred_mask)
+            print(f'{image_id=}')
+            print(f'{img_path=}')
+            print(pred_mask.shape)
+            print(pred_mask)
 
-                plt.show()
+            plt.show()
+
+        if False and pred_mask.any():
+            show_mask()
 
 
 
@@ -567,18 +572,30 @@ if __name__ == '__main__':
     checkpoint_path = r'weights/FOMO_56_res_v0_focal drones_only_FOMO_1.0.2/BEST_49e.pth'
     model_name = 'FOMO_56_42e_res_v0_focal'
 
-    coco_dataset = Dataset.get(dataset_name='drones_only_FOMO', dataset_project="SmallObjectDetection")
-    image_path = coco_dataset.get_local_copy()
-    reference_json = gt_pathes['drones_only_FOMO_val']
-    dataset_name = 'drones_only_FOMO_val'
+    model = FomoModel56() # Дефолтная FOMO
+    checkpoint_path = r'weights/BEST_FOMO_56_crossEntropy_dronesOnly_104e_model_weights.pth'
+    model_name = 'FOMO_56_104e'
+
+    # coco_dataset = Dataset.get(dataset_name='drones_only_FOMO', dataset_project="SmallObjectDetection")
+    # image_path = coco_dataset.get_local_copy()
+    # reference_json = gt_pathes['drones_only_FOMO_val']
+    # dataset_name = 'drones_only_FOMO_val'
 
     # main(model=model, checkpoint_path=checkpoint_path, model_name=model_name,
     #      dataset_path=image_path, reference_json=reference_json, dataset_name=dataset_name, draw_bbox=False)
 
-    coco_dataset = Dataset.get(dataset_id='ae8c12c33b324947af9ae6379d920eb8')  # drones only 1.0.5
-    image_path = coco_dataset.get_local_copy()
-    reference_json = 'GTlabels/ae8c12c33b324947af9ae6379d920eb8/coco_annotations_val.json'
-    dataset_name = 'drones_only_val'
+    # coco_dataset = Dataset.get(dataset_id='ae8c12c33b324947af9ae6379d920eb8')  # drones only 1.0.5
+    # image_path = coco_dataset.get_local_copy()
+    # reference_json = 'GTlabels/ae8c12c33b324947af9ae6379d920eb8/coco_annotations_val.json'
+    # dataset_name = 'drones_only_val'
+
+    # image_path = r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\data\vid1\images' #vid 1 drone
+    # reference_json = r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\data\vid1\labels_drone\annotations\drone_annotations.json'
+    # dataset_name = 'vid1_drone'
+
+    image_path = r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\data\skb_test\images' # skb_test
+    reference_json = r'GTlabels/skb_test/skb_test.json'
+    dataset_name = 'skb_test'
 
     main(model=model, checkpoint_path=checkpoint_path, model_name=model_name,
          dataset_path=image_path, reference_json=reference_json, dataset_name=dataset_name, draw_bbox=False)

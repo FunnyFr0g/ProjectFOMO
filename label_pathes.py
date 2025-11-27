@@ -5,6 +5,8 @@ gt_pathes = {
     # 'drones_only_val' : r'C:\Users\ILYA\.clearml\cache\storage_manager\datasets\ds_ae8c12c33b324947af9ae6379d920eb8\val_annotations.json',
     'drones_only_train' : 'GTlabels/ae8c12c33b324947af9ae6379d920eb8/coco_annotations_train.json',
     'mva23_val':r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\data\mva2023_sod4bird_train\val\mva23_val_UPDATED.json',
+    'vid1_drone': r'GTlabels/vid1_drone/drone_annotations.json',
+    'skb_test' : r'GTlabels/skb_test/skb_test.json',
 }
 
 pred_pathes = {
@@ -28,6 +30,12 @@ pred_pathes = {
 	 'drones_only_val FOMO_56_71e_res_v1_focal': r'predictions\drones_only_val!FOMO_56_71e_res_v1_focal\annotations\predictions.json',
 	 'drones_only_val FOMO_56_42e_res_v1_focal': r'predictions\drones_only_val!FOMO_56_42e_res_v1_focal\annotations\predictions.json',
 	 'drones_only_FOMO_val FOMO_56_42e_res_v1_focal': r'predictions\drones_only_FOMO_val!FOMO_56_42e_res_v1_focal\annotations\predictions.json',
+
+    'vid1_drone FOMO_56_104e': r'predictions\vid1_drone!FOMO_56_104e\annotations\predictions.json',
+    'vid1_drone FOMO_56_42e_res_v0_focal': r'predictions\vid1_drone!FOMO_56_42e_res_v0_focal\annotations\predictions.json',
+
+    'skb_test FOMO_56_104e': r'predictions\skb_test!FOMO_56_104e\annotations\predictions.json',
+    'skb_test FOMO_56_42e_res_v0_focal': r'predictions\skb_test!FOMO_56_42e_res_v0_focal\annotations\predictions.json',
 
 
 

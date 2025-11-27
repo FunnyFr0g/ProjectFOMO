@@ -249,7 +249,7 @@ def plot_precision_recall_curve(precision, recall, ap, title, save_path):
 
 
 def process_all_datasets(gt_pathes, pred_pathes, datasets_list, predict_list, iou_threshold=0.5,
-                         output_dir='model_graphics', move_score=False):
+                         output_dir='model_graphics', move_score=False, save_txt=False):
     """Обрабатывает все датасеты и модели"""
     os.makedirs(output_dir, exist_ok=True)
 
@@ -297,6 +297,16 @@ def process_all_datasets(gt_pathes, pred_pathes, datasets_list, predict_list, io
                 'IoU Threshold': iou_threshold
             })
 
+            if save_txt:
+                os.makedirs(os.path.join(output_dir, 'PR arrays'), exist_ok=True)
+                txt_path = os.path.join(output_dir, 'PR arrays', f'{dataset_name} {model_name}.txt')
+                np.savetxt(
+                    txt_path,
+                    np.column_stack((precision, recall))
+                )
+
+
+
             # Сохраняем отдельный график
             title = f'{dataset_name} {model_name} IoU={iou_threshold}'
             save_path = os.path.join(output_dir, f'{title}.png')
@@ -342,7 +352,7 @@ if __name__ == "__main__":
     # datasets_list = ['skb_test']
     # predict_list = ['FOMO 50e', 'FOMO 50e no_resize', 'FOMO112 50e', 'FOMO112 10e']
 
-    datasets_list = ['drones_only_FOMO_val', 'drones_only_val']
+    datasets_list = ['drones_only_FOMO_val', 'drones_only_val', 'vid1_drone', 'skb_test']
     # model_name_list = ['FOMO_56_104e','FOMO_56_104e_NORESIZE', 'FOMO_bg_56_14e','FOMO_56_22e_bg_crop', 'FOMO_56_35e_res_v0', 'baseline', ]
     # model_name_list = ['FOMO_56_104e', 'FOMO_bg_56_14e','FOMO_56_22e_bg_crop', 'FOMO_56_35e_res_v0',
     #                    'FOMO_56_42e_res_v1', 'FOMO_56_150e_res_v1', 'FOMO_56_42e_res_v1_focal','FOMO_56_71e_res_v1_focal', 'baseline', ]
@@ -362,7 +372,8 @@ if __name__ == "__main__":
         datasets_list,
         model_name_list,
         iou_threshold,
-        move_score=True
+        move_score=True,
+        save_txt=True
     )
 
     print("Processing complete. Results saved to model_graphics folder.")

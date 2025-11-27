@@ -26,7 +26,7 @@ from FOMOmodels import FomoModelResV0, FomoModelResV1
 #     task_name='FOMO-dronesOnly_train',
 #     tags=['FOMO'])
 
-USE_CLEARML = 1
+USE_CLEARML = 0
 
 if USE_CLEARML:
     Task.ignore_requirements('pywin32')

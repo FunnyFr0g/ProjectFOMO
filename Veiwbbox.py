@@ -164,8 +164,20 @@ if __name__ == "__main__":
     # viewer.run()
 
     # image_folder = r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\data\vid1\images'
+    # coco_json = r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\data\vid1\vid1.json'
+    # coco_json = pred_pathes['vid1_drone FOMO_56_42e_res_v0_focal']
+
+
+    image_folder = r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\data\skb_test\images'
+    coco_json = gt_pathes['skb_test']
+
+
+
     # coco_json = r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\submit\vid1\coco_predictions.json'
     # coco_json = r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\data\mva2023_sod4bird_train\runs\detect\val y=12n p=1088 vid1_imgs5\coco_predictions.json'
+
+    viewer = CocoViewer(image_folder, coco_json)
+    viewer.run()
 
     ### VAL
     # image_folder = r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\data\mva2023_sod4bird_train\val\images'
