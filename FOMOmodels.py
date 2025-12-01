@@ -12,7 +12,7 @@ import json
 import os
 from pycocotools.coco import COCO
 from tqdm import tqdm
-from torch.utils.tensorboard import SummaryWriter
+# from torch.utils.tensorboard import SummaryWriter
 import time
 import random
 
@@ -374,7 +374,7 @@ class FomoModel112(nn.Module):
 # --- 4. Обучение ---
 def train(model, dataloader, criterion, optimizer, device):
     log_dir = r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\FOMO'
-    writer = SummaryWriter(log_dir)
+    # writer = SummaryWriter(log_dir)
     model.train()
     running_loss = 0.0
     for images, masks in tqdm(dataloader, desc="Training"):
