@@ -30,7 +30,7 @@ if use_clearml:
 params = {
 "NUM_CLASSES" : 2,  # Кол-во классов (включая фон)
 'DO_RESIZE' : True,
-"INPUT_SIZE" : (224, 224), # Размер входного изображения
+"INPUT_SIZE" : (4*224, 4*224), # Размер входного изображения
 "BOX_SIZE" : 8,  # Размер стороны квадратного желаемого bounding box'а в пикселях
 }
 if use_clearml:
@@ -112,7 +112,7 @@ class FomoModel(nn.Module):
         return self.head(features)
 
 
-def prepare_image(image_path):
+def prepare_image(image_path, new_size=params["INPUT_SIZE"], to_cuda=True):
     """Подготовка изображения (ресайз и нормализация)"""
     image = cv2.imread(image_path)
     orig_h, orig_w = image.shape[:2]
@@ -121,7 +121,7 @@ def prepare_image(image_path):
     if params['DO_RESIZE']:
         transform = transforms.Compose([
             transforms.ToPILImage(),
-            transforms.Resize(params["INPUT_SIZE"]),
+            transforms.Resize(new_size),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
@@ -133,6 +133,8 @@ def prepare_image(image_path):
         ])
 
     image_tensor = transform(image)
+    if to_cuda and torch.cuda.is_available():
+        image_tensor = image_tensor.to("cuda")
     return image_tensor.unsqueeze(0), (orig_w, orig_h)
 
 
@@ -413,6 +415,9 @@ def main(model=FomoModelResV0(), checkpoint_path=None, model_name='', dataset_pa
 
     state_dict = torch.load(checkpoint_path)
     model.load_state_dict(state_dict)
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = model.to(device)
     model.eval()
 
     # dataset_name = "drones_only"
@@ -476,9 +481,11 @@ def main(model=FomoModelResV0(), checkpoint_path=None, model_name='', dataset_pa
         image_tensor, orig_size = prepare_image(img_path)
 
         with torch.no_grad():
-            output = model(image_tensor)
+            output = model(image_tensor.cuda())
+            # probs = F.softmax(output, dim=1).squeeze(0).numpy()  # [C, H, W]
             probs = F.softmax(output, dim=1).squeeze(0).cpu().numpy()  # [C, H, W]
             # print(f'{probs.shape=}')
+            # pred_mask = torch.argmax(output, dim=1).squeeze().numpy()  # [H, W]
             pred_mask = torch.argmax(output, dim=1).squeeze().cpu().numpy()  # [H, W]
             # print(f'{pred_mask.shape=}')
 
@@ -601,10 +608,24 @@ res_v0_focal = TrainedFomo(
     model_name='FOMO_56_42e_res_v0_focal'
 )
 
+res_v0_focal_896 = TrainedFomo(
+    model=FomoModelResV0,
+    checkpoint='weights/FOMO_56_res_v0_focal drones_only_FOMO_1.0.2/BEST_49e.pth',
+    model_name='FOMO_56_42e_res_v0_focal_896p'
+)
+
+
+
 res_v1 = TrainedFomo(
     model=FomoModelResV1,
     checkpoint='weights/FOMO_56_res_v1 drones_only_FOMO_1.0.2/BEST_42e.pth',
     model_name='FOMO_56_42e_res_v1'
+)
+
+res_v1_896 = TrainedFomo(
+    model=FomoModelResV1,
+    checkpoint='weights/FOMO_56_res_v1 drones_only_FOMO_1.0.2/BEST_42e.pth',
+    model_name='FOMO_56_42e_res_v1_896p'
 )
 
 res_v1_focal = TrainedFomo(
@@ -650,18 +671,33 @@ skb_test_nobird = MyDataset(
     name='skb_test_nobird'
 )
 
+skb_test_bg = MyDataset(
+    image_path=r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\data\skb_test_bg\images',  #
+    reference_json = r'GTlabels/skb_test_bg/annotations.json',
+    name='skb_test_bg'
+)
+
+synth_drone_val = MyDataset(
+    image_path=Dataset.get(dataset_id='f9ad9ea5bc3d40498e67133578ad5099').get_local_copy(),  # synth_drone_val
+    reference_json = gt_pathes['synth_drone_val'],
+    name='synth_drone_val'
+)
+
 
 
 
 if __name__ == '__main__':
 
-    models = [base, bg, bg_crop, res_v0, res_v0_focal, res_v1, res_v1_focal]
-    # datasets = [drones_only_FOMO_val, drones_only_val, vid1_drone,skb_test, skb_test_nobird]
-    datasets = [ vid1_drone, skb_test, skb_test_nobird]
+    all_models = [base, bg, bg_crop, res_v0, res_v0_focal, res_v1, res_v1_focal]
+    models = [res_v1_896]
+    datasets = [drones_only_FOMO_val, drones_only_val, vid1_drone,skb_test, skb_test_nobird, skb_test_bg, synth_drone_val]
+    # datasets = [synth_drone_val]
+
+    result_pathes = []
 
     for dataset in datasets:
         for trained_model in models:
-            main(model=trained_model.model,
+            result = main(model=trained_model.model,
                  checkpoint_path=trained_model.checkpoint,
                  model_name=trained_model.model_name,
                  dataset_path=dataset.image_path,
@@ -669,7 +705,11 @@ if __name__ == '__main__':
                  dataset_name=dataset.name,
 
                  draw_bbox=False)
+            result_pathes.append(result)
 
+    print('Done!')
+    for result_path in result_pathes:
+        print(result_path)
     input("Press Enter to continue...")
     exit(0)
 
