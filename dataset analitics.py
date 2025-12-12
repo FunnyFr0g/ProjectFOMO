@@ -163,6 +163,8 @@ class COCOAnalyzer:
         plt.style.use('default')
         sns.set_palette("husl")
 
+        fontsize = 16
+
         # 1. Распределение размеров изображений
         fig, axes = plt.subplots(2, 2, figsize=(15, 12))
 
@@ -199,35 +201,35 @@ class COCOAnalyzer:
 
         # Абсолютные размеры bbox
         axes[0, 0].hist(self.df_annotations['width_x'], bins=50, alpha=0.7)
-        axes[0, 0].set_title('Распределение ширины bbox')
-        axes[0, 0].set_xlabel('Ширина bbox (px)')
-        axes[0, 0].set_ylabel('Количество')
+        axes[0, 0].set_title('Распределение ширины bbox', fontsize=fontsize)
+        axes[0, 0].set_xlabel('Ширина bbox (px)', fontsize=fontsize)
+        axes[0, 0].set_ylabel('Количество', fontsize=fontsize)
 
         axes[0, 1].hist(self.df_annotations['height_x'], bins=50, alpha=0.7, color='orange')
-        axes[0, 1].set_title('Распределение высоты bbox')
-        axes[0, 1].set_xlabel('Высота bbox (px)')
-        axes[0, 1].set_ylabel('Количество')
+        axes[0, 1].set_title('Распределение высоты bbox', fontsize=fontsize)
+        axes[0, 1].set_xlabel('Высота bbox (px)',fontsize=fontsize)
+        axes[0, 1].set_ylabel('Количество',fontsize=fontsize)
 
         axes[0, 2].hist(self.df_annotations['bbox_area'], bins=50, alpha=0.7, color='red')
-        axes[0, 2].set_title('Распределение площади bbox')
-        axes[0, 2].set_xlabel('Площадь bbox (px²)')
-        axes[0, 2].set_ylabel('Количество')
+        axes[0, 2].set_title('Распределение площади bbox', fontsize=fontsize)
+        axes[0, 2].set_xlabel('Площадь bbox (px²)', fontsize=fontsize)
+        axes[0, 2].set_ylabel('Количество', fontsize=fontsize)
 
         # Относительные размеры bbox
         axes[1, 0].hist(self.df_annotations['rel_width'], bins=50, alpha=0.7)
-        axes[1, 0].set_title('Относительная ширина bbox')
-        axes[1, 0].set_xlabel('Ширина bbox / Ширина изображения')
-        axes[1, 0].set_ylabel('Количество')
+        axes[1, 0].set_title('Относительная ширина bbox', fontsize=fontsize)
+        axes[1, 0].set_xlabel('Ширина bbox / Ширина изображения', fontsize=fontsize)
+        axes[1, 0].set_ylabel('Количество', fontsize=fontsize)
 
         axes[1, 1].hist(self.df_annotations['rel_height'], bins=50, alpha=0.7, color='orange')
-        axes[1, 1].set_title('Относительная высота bbox')
-        axes[1, 1].set_xlabel('Высота bbox / Высота изображения')
-        axes[1, 1].set_ylabel('Количество')
+        axes[1, 1].set_title('Относительная высота bbox', fontsize=fontsize)
+        axes[1, 1].set_xlabel('Высота bbox / Высота изображения', fontsize=fontsize)
+        axes[1, 1].set_ylabel('Количество', fontsize=fontsize)
 
-        axes[1, 2].hist(self.df_annotations['rel_area'], bins=50, alpha=0.7, color='red')
-        axes[1, 2].set_title('Относительная площадь bbox')
-        axes[1, 2].set_xlabel('Площадь bbox / Площадь изображения')
-        axes[1, 2].set_ylabel('Количество')
+        axes[1, 2].hist(self.df_annotations['rel_area'], bins=50, alpha=0.7, color='red', range=(0, 0.5))
+        axes[1, 2].set_title('Относительная площадь bbox', fontsize=fontsize)
+        axes[1, 2].set_xlabel('Площадь bbox / Площадь изображения', fontsize=fontsize)
+        axes[1, 2].set_ylabel('Количество', fontsize=fontsize)
 
         plt.tight_layout()
         plt.savefig(output_path / 'bbox_sizes_analysis.png', dpi=300, bbox_inches='tight')
@@ -299,8 +301,9 @@ class COCOAnalyzer:
 
 
 def main():
+    from label_pathes import gt_pathes
     # Пример использования
-    annotation_file = "GTlabels/ds_45062c8b1fac490480d105ad9c945f22/train/train_annotations.json"  # Укажите путь к вашему файлу
+    annotation_file = gt_pathes['skb_test_bg']  # Укажите путь к вашему файлу
 
     # Инициализация анализатора
     analyzer = COCOAnalyzer(annotation_file)

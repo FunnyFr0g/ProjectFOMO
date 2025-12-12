@@ -70,10 +70,12 @@ def convert_predictions_to_coco(predictions_file, annotations_file, output_file,
 
 # Пример использования
 if __name__ == "__main__":
+    from label_pathes import *
+
     # Укажите ваши пути к файлам
-    predictions_file = r"predictions/baseline/baseline_dronesonly_val_MMDET.json"  # Ваш файл с предсказаниями
-    annotations_file = r'GTlabels/ae8c12c33b324947af9ae6379d920eb8/coco_annotations_val.json'  # COCO-аннотации
-    output_file = r"predictions/baseline/baseline_dronesonly_val.json"  # Выходной файл
+    predictions_file = r"X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\submit\skb_test_bg\results.bbox.json"  # Ваш файл с предсказаниями
+    annotations_file = gt_pathes['skb_test_bg']  # COCO-аннотации
+    output_file = r"predictions/baseline/skb_test_bg.json"  # Выходной файл
 
     # predictions_file = r"predictions/baseline/baseline_dronesonly_val_MMDET.json"  # Ваш файл с предсказаниями
     # annotations_file = r'C:\Users\ILYA\.clearml\cache\storage_manager\datasets\ds_ae8c12c33b324947af9ae6379d920eb8\val_annotations_class0.json'  # COCO-аннотации
@@ -83,5 +85,5 @@ if __name__ == "__main__":
     # annotations_file = r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\submit\mva23_val\coco_predictions.json'  # COCO-аннотации
     # output_file = r"X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\submit\mva23_val\predicts_new_script.json"  # Выходной файл
 
-    convert_predictions_to_coco(predictions_file, annotations_file, output_file, add_1=True)
+    convert_predictions_to_coco(predictions_file, annotations_file, output_file, add_1=False)
 

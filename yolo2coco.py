@@ -5,7 +5,7 @@ from PIL import Image
 from collections import defaultdict
 
 
-def convert_yolo_to_coco(yolo_dir, output_file, class_file=None):
+def convert_yolo_to_coco(yolo_dir, output_file, class_file=None, part='val'):
     """
     Конвертирует набор данных с разметкой YOLO в формат COCO.
 
@@ -15,10 +15,14 @@ def convert_yolo_to_coco(yolo_dir, output_file, class_file=None):
         class_file (str, optional): Путь к файлу с классами (если нет classes.txt)
     """
     # Пути к директориям
-    images_dir = os.path.join(yolo_dir, 'images')
-    labels_dir = os.path.join(yolo_dir, 'labels')
+    images_dir = os.path.join(yolo_dir, 'images', part)
+    labels_dir = os.path.join(yolo_dir, 'labels', part)
 
     # Проверка существования директорий
+    if not os.path.exists(images_dir) or not os.path.exists(labels_dir):
+        images_dir = os.path.join(yolo_dir, 'images')
+        labels_dir = os.path.join(yolo_dir, 'labels')
+
     if not os.path.exists(images_dir) or not os.path.exists(labels_dir):
         raise ValueError("Директории 'images' и 'labels' должны находиться в yolo_dir")
 
@@ -143,6 +147,7 @@ def convert_yolo_to_coco(yolo_dir, output_file, class_file=None):
 
 
 if __name__ == "__main__":
+    from clearml import Dataset
     # parser = argparse.ArgumentParser(description='Конвертация разметки YOLO в COCO формат')
     # parser.add_argument('--yolo_dir', type=str, required=True,
     #                     help='Путь к директории с данными YOLO (содержащей images/ и labels/)')
@@ -155,5 +160,8 @@ if __name__ == "__main__":
 
     yolo_dir = r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\data\skb_test'
     coco_dir = r'X:\SOD\MVA2023SmallObjectDetection4SpottingBirds\data\skb_test\skb_test.json'
+
+    yolo_dir = Dataset.get(dataset_id='f9ad9ea5bc3d40498e67133578ad5099').get_local_copy()
+    coco_dir = os.path.join(yolo_dir, 'val_annotations.json')
 
     convert_yolo_to_coco(yolo_dir, coco_dir, ('bird',))

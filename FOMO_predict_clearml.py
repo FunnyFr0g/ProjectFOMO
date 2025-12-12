@@ -30,7 +30,7 @@ if use_clearml:
 params = {
 "NUM_CLASSES" : 2,  # Кол-во классов (включая фон)
 'DO_RESIZE' : True,
-"INPUT_SIZE" : (4*224, 4*224), # Размер входного изображения
+"INPUT_SIZE" : (224, 224), # Размер входного изображения
 "BOX_SIZE" : 8,  # Размер стороны квадратного желаемого bounding box'а в пикселях
 }
 if use_clearml:
@@ -112,30 +112,45 @@ class FomoModel(nn.Module):
         return self.head(features)
 
 
-def prepare_image(image_path, new_size=params["INPUT_SIZE"], to_cuda=True):
-    """Подготовка изображения (ресайз и нормализация)"""
+if torch.cuda.is_available():
+    MEAN_GPU = torch.tensor([0.485, 0.456, 0.406], device='cuda').view(1, 3, 1, 1)
+    STD_GPU = torch.tensor([0.229, 0.224, 0.225], device='cuda').view(1, 3, 1, 1)
+else:
+    MEAN_CPU = torch.tensor([0.485, 0.456, 0.406]).view(1, 3, 1, 1)
+    STD_CPU = torch.tensor([0.229, 0.224, 0.225]).view(1, 3, 1, 1)
+
+
+def prepare_image(image_path, new_size=params["INPUT_SIZE"], to_cuda=True, to_cpu=False):
+    """Оптимизированная подготовка изображения (ресайз, и нормализация). Может выполняться на CUDA"""
+    # Чтение
     image = cv2.imread(image_path)
     orig_h, orig_w = image.shape[:2]
+
+    # BGR → RGB и ресайз
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
     if params['DO_RESIZE']:
-        transform = transforms.Compose([
-            transforms.ToPILImage(),
-            transforms.Resize(new_size),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ])
-    else:
-        transform = transforms.Compose([
-            transforms.ToPILImage(),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ])
+        image = cv2.resize(image, new_size)
 
-    image_tensor = transform(image)
+    # Быстрая конвертация в tensor
+    # np.ascontiguousarray важно для производительности!
+    image = np.ascontiguousarray(image)
+    tensor = torch.from_numpy(image).float()
+
+    # Реорганизация и нормализация
+    tensor = tensor.permute(2, 0, 1).div_(255.0)  # CHW и [0,1]
+
+    # На GPU (если доступно)
     if to_cuda and torch.cuda.is_available():
-        image_tensor = image_tensor.to("cuda")
-    return image_tensor.unsqueeze(0), (orig_w, orig_h)
+        tensor = tensor.cuda()
+        tensor = tensor.unsqueeze(0)  # Добавляем batch dimension
+        tensor = (tensor - MEAN_GPU) / STD_GPU
+    else:
+        tensor = tensor.unsqueeze(0)
+        tensor = (tensor - MEAN_CPU) / STD_CPU
+    if to_cpu:
+        tensor = tensor.cpu()
+
+    return tensor, (orig_w, orig_h)
 
 
 def scale_coords(coords, from_size=(56, 56), to_size=params["INPUT_SIZE"], orig_size=None):
@@ -499,12 +514,12 @@ def main(model=FomoModelResV0(), checkpoint_path=None, model_name='', dataset_pa
 
             axes[0].imshow(source_img)
             axes[0].set_title('Исходное изображение')
-            # axes[1].imshow(prep_image,)
-            # axes[1].set_title("Подготовленное изображение")
-            axes[1].imshow(heatmap,)
-            axes[1].set_title("Heatmap")
-            axes[2].imshow(pred_mask, cmap='gray')
-            axes[2].set_title("Mask")
+            axes[1].imshow(prep_image,)
+            axes[1].set_title("Подготовленное изображение")
+            axes[2].imshow(heatmap,)
+            axes[2].set_title("Heatmap")
+            axes[3].imshow(pred_mask, cmap='gray')
+            axes[3].set_title("Mask")
 
 
             # plt.figure(1)
@@ -524,7 +539,7 @@ def main(model=FomoModelResV0(), checkpoint_path=None, model_name='', dataset_pa
 
             plt.show()
 
-        if 0 and pred_mask.any():
+        if 1 and pred_mask.any():
             show_mask()
 
 

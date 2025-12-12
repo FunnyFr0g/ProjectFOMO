@@ -20,11 +20,18 @@ from clearml import Task
 BOX_SIZE = 8  # Размер стороны квадратного bounding box'а в пикселях
 TRUNK_AT = 4
 NUM_CLASSES = 2
-W, H = 1920, 1080
+W, H = 4*224, 4*224
 VIDEO_SIZE = (H, W)
 MODEL_NAME = 'FOMO_22e_bg_cr'
 
 SHOW_IMAGE = False
+
+params = {
+"NUM_CLASSES" : 2,  # Кол-во классов (включая фон)
+'DO_RESIZE' : True,
+"INPUT_SIZE" : VIDEO_SIZE, # Размер входного изображения
+"BOX_SIZE" : 16,  # Размер стороны квадратного желаемого bounding box'а в пикселях
+}
 
 class FomoBackbone(nn.Module):
     def __init__(self):
@@ -63,20 +70,44 @@ class FomoModel(nn.Module):
         features = self.backbone(x)
         return self.head(features)
 
+if torch.cuda.is_available():
+    MEAN_GPU = torch.tensor([0.485, 0.456, 0.406], device='cuda').view(1, 3, 1, 1)
+    STD_GPU = torch.tensor([0.229, 0.224, 0.225], device='cuda').view(1, 3, 1, 1)
+else:
+    MEAN_CPU = torch.tensor([0.485, 0.456, 0.406]).view(1, 3, 1, 1)
+    STD_CPU = torch.tensor([0.229, 0.224, 0.225]).view(1, 3, 1, 1)
 
-def prepare_frame(frame):
-    orig_h, orig_w = frame.shape[:2]
-    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-    transform = transforms.Compose([
-        transforms.ToPILImage(),
-        transforms.Resize(VIDEO_SIZE),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-    ])
+def prepare_image(image, new_size=params["INPUT_SIZE"], to_cuda=True, to_cpu=False):
+    """Оптимизированная подготовка изображения (ресайз, и нормализация). Может выполняться на CUDA"""
+    # Чтение
+    orig_h, orig_w = image.shape[:2]
 
-    frame_tensor = transform(frame)
-    return frame_tensor.unsqueeze(0), (orig_w, orig_h)
+    # BGR → RGB и ресайз
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    if params['DO_RESIZE']:
+        image = cv2.resize(image, new_size)
+
+    # Быстрая конвертация в tensor
+    # np.ascontiguousarray важно для производительности!
+    image = np.ascontiguousarray(image)
+    tensor = torch.from_numpy(image).float()
+
+    # Реорганизация и нормализация
+    tensor = tensor.permute(2, 0, 1).div_(255.0)  # CHW и [0,1]
+
+    # На GPU (если доступно)
+    if to_cuda and torch.cuda.is_available():
+        tensor = tensor.cuda()
+        tensor = tensor.unsqueeze(0)  # Добавляем batch dimension
+        tensor = (tensor - MEAN_GPU) / STD_GPU
+    else:
+        tensor = tensor.unsqueeze(0)
+        tensor = (tensor - MEAN_CPU) / STD_CPU
+    if to_cpu:
+        tensor = tensor.cpu()
+
+    return tensor, (orig_w, orig_h)
 
 
 def scale_coords(coords, from_size=(56, 56), to_size=(224, 224), orig_size=None):
@@ -239,7 +270,7 @@ def process_video(video_path, output_video, output_json, model, frame_interval=1
             print(f"Processing frame {frame_count} из {total_frames} progress {frame_count/total_frames*100:.2f}%")
 
         image_id += 1
-        frame_tensor, orig_size = prepare_frame(frame)
+        frame_tensor, orig_size = prepare_image(frame)
 
         with torch.no_grad():
             output = model(frame_tensor)
@@ -329,9 +360,11 @@ def visualize_detections(frame, annotations, frame_count, output_video, mask=Non
 
 # Основной код
 def main():
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = FomoModel(num_classes=NUM_CLASSES)
     checkpoint_path = 'weights/FOMO_56_bg_crop_drones_only_FOMO_1.0.2/BEST_22e.pth'
     model.load_state_dict(torch.load(checkpoint_path))
+    model = model.to(device)
     model.eval()
 
     # Обработка видеофайла

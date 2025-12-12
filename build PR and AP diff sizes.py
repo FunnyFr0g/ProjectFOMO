@@ -215,6 +215,113 @@ def plot_precision_recall_curves_size_ranges(results, title, save_path):
     plt.close()
 
 
+def plot_ap_vs_size_for_dataset_model(all_results, datasets_list, predict_list, output_dir, size_ranges=[(0, 16), (16, 32), (32, float('inf'))]):
+    """Строит графики зависимости AP от размера объекта для каждого датасета и модели"""
+
+    # Определяем диапазоны размеров (такие же как в основной функции)
+    size_labels = [str(s) for s in size_ranges]
+
+    # Создаем отдельную папку для графиков AP vs Size
+    ap_vs_size_dir = os.path.join(output_dir, 'ap_vs_size')
+    os.makedirs(ap_vs_size_dir, exist_ok=True)
+
+    # Для каждого датасета создаем отдельный график со всеми моделями
+    for dataset_name in datasets_list:
+        plt.figure(figsize=(12, 8))
+
+        # Собираем все модели для этого датасета
+        models_for_dataset = []
+        ap_values_per_model = []
+
+        for model_name in predict_list:
+            key = (dataset_name, model_name)
+            if key in all_results:
+                results = all_results[key]
+
+                # Извлекаем AP значения для каждого диапазона размеров
+                ap_values = []
+                for size_range in size_ranges:
+                    if size_range in results:
+                        ap_values.append(results[size_range]['ap'])
+                    else:
+                        ap_values.append(0.0)
+
+                models_for_dataset.append(model_name)
+                ap_values_per_model.append(ap_values)
+
+        # Строим график для каждой модели
+        colors = plt.cm.tab10(np.linspace(0, 1, len(models_for_dataset)))
+        for i, (model_name, ap_values) in enumerate(zip(models_for_dataset, ap_values_per_model)):
+            plt.plot(size_labels, ap_values,
+                     marker='o', linewidth=2, markersize=6,
+                     color=colors[i], label=model_name,
+                     ls='--' if model_name in ('baseline', 'FOMO_56_104e') else '-')
+
+        plt.xlabel('Size Range (pixels)')
+        plt.ylabel('Average Precision (AP)')
+        plt.title(f'AP(size) dataset: {dataset_name}')
+        plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+        plt.grid(True, alpha=0.3)
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+        # plt.ylim([0.0, 0.5])
+
+        # Сохраняем график
+        save_path = os.path.join(ap_vs_size_dir, f'dataset {dataset_name}.png')
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.close()
+
+        print(f"AP vs Size plot for {dataset_name} saved to: {save_path}")
+
+    # Также создаем графики для каждой модели по всем датасетам
+    for model_name in predict_list:
+        plt.figure(figsize=(12, 8))
+
+        # Собираем все датасеты для этой модели
+        datasets_for_model = []
+        ap_values_per_dataset = []
+
+        for dataset_name in datasets_list:
+            key = (dataset_name, model_name)
+            if key in all_results:
+                results = all_results[key]
+
+                # Извлекаем AP значения для каждого диапазона размеров
+                ap_values = []
+                for size_range in size_ranges:
+                    if size_range in results:
+                        ap_values.append(results[size_range]['ap'])
+                    else:
+                        ap_values.append(0.0)
+
+                datasets_for_model.append(dataset_name)
+                ap_values_per_dataset.append(ap_values)
+
+        # Строим график для каждого датасета
+        colors = plt.cm.Set3(np.linspace(0, 1, len(datasets_for_model)))
+        for i, (dataset_name, ap_values) in enumerate(zip(datasets_for_model, ap_values_per_dataset)):
+            plt.plot(size_labels, ap_values,
+                     marker='s', linewidth=2, markersize=6,
+                     color=colors[i], label=dataset_name)
+
+
+
+        plt.xlabel('Size Range (pixels)')
+        plt.ylabel('Average Precision (AP)')
+        plt.title(f'AP(size) model: {model_name}')
+        plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+        plt.grid(True, alpha=0.3)
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+
+        # Сохраняем график
+        save_path = os.path.join(ap_vs_size_dir, f'model {model_name}.png')
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+        plt.close()
+
+        print(f"AP vs Size plot for {model_name} saved to: {save_path}")
+
+
 def create_unified_size_ranges_grid(all_results, datasets_list, predict_list, output_dir, iou_threshold=0.5):
     """Создает единое полотно с графиками для всех датасетов и моделей"""
 
@@ -323,12 +430,11 @@ def create_ap_heatmap(all_results, datasets_list, predict_list, output_dir, size
 
 
 def process_all_datasets_with_size_ranges(gt_pathes, pred_pathes, datasets_list, predict_list,
-                                          iou_threshold=0.5, output_dir='model_graphics_size_ranges'):
+                                          iou_threshold=0.5, output_dir='model_graphics_size_ranges', size_ranges=[(0, 16), (16, 32), (32, float('inf'))]):
     """Обрабатывает все датасеты и модели с анализом по размерам объектов"""
     os.makedirs(output_dir, exist_ok=True)
 
     # Определяем диапазоны размеров (в пикселях после приведения к 224x224)
-    size_ranges = [(0, 16), (16, 32), (32, 48), (48, 64), (64, float('inf'))]
 
     ap_results = []
     all_results = {}  # Сохраняем все результаты для создания единого полотна
@@ -356,7 +462,7 @@ def process_all_datasets_with_size_ranges(gt_pathes, pred_pathes, datasets_list,
                 pred_json = json.load(open(pred_pathes[pred_name]))
             except Exception as e:
                 print(f'Для {pred_name} не найдено пути')
-                print('!'*20)
+                print('!' * 20)
                 print(e)
                 continue
 
@@ -401,6 +507,9 @@ def process_all_datasets_with_size_ranges(gt_pathes, pred_pathes, datasets_list,
     for size_range in size_ranges:
         create_ap_heatmap(all_results, datasets_list, predict_list, output_dir, size_range)
 
+    # СОЗДАЕМ ГРАФИКИ AP VS SIZE
+    plot_ap_vs_size_for_dataset_model(all_results, datasets_list, predict_list, output_dir, size_ranges)
+
     # Сохраняем результаты в CSV
     df = pd.DataFrame(ap_results)
     df.to_csv(os.path.join(output_dir, 'ap_results_size_ranges.csv'), index=False)
@@ -419,8 +528,10 @@ def process_all_datasets_with_size_ranges(gt_pathes, pred_pathes, datasets_list,
 if __name__ == "__main__":
     from label_pathes import gt_pathes, pred_pathes
 
-    datasets_list = ['drones_only_FOMO_val', 'drones_only_val', 'vid1_drone', 'skb_test', 'skb_test_nobird',
+    all_datasets_list = ['drones_only_FOMO_val', 'drones_only_val', 'vid1_drone', 'skb_test', 'skb_test_nobird',
                      'skb_test_bg', 'synth_drone_val']
+
+    datasets_list = ['drones_only_val', 'skb_test_bg', 'synth_drone_val']
     # model_name_list = ['FOMO_56_104e','FOMO_56_104e_NORESIZE', 'FOMO_bg_56_14e','FOMO_56_22e_bg_crop', 'FOMO_56_35e_res_v0', 'baseline', ]
     # model_name_list = ['FOMO_56_104e', 'FOMO_bg_56_14e','FOMO_56_22e_bg_crop', 'FOMO_56_35e_res_v0',
     #                    'FOMO_56_42e_res_v1', 'FOMO_56_150e_res_v1', 'FOMO_56_42e_res_v1_focal','FOMO_56_71e_res_v1_focal', 'baseline', ]
@@ -430,17 +541,25 @@ if __name__ == "__main__":
                        'FOMO_56_42e_res_v1',
                        'FOMO_56_71e_res_v1_focal',
                        'baseline',
-                       'FOMO_56_42e_res_v0_focal_896p']
+                       'FOMO_56_42e_res_v0_focal_896p', 'FOMO_56_42e_res_v1_896p']
 
     print(model_name_list)
 
     # Запускаем обработку с анализом по размерам
+    # size_ranges = [(i, i+4) for i in range(0, 64, 4)]
+    size_ranges = [(i, i+2) for i in range(0, 32, 2)]
+    size_ranges.append((size_ranges[-1][-1], float('inf')))
+
+    print(size_ranges)
+
+
     results, all_results = process_all_datasets_with_size_ranges(
         gt_pathes,
         pred_pathes,
         datasets_list,
         model_name_list,
-        iou_threshold
+        iou_threshold,
+        size_ranges=size_ranges
     )
 
     print("Processing complete. Results saved to model_graphics_size_ranges folder.")

@@ -66,7 +66,7 @@ def simple_align_coco(reference_json, prediction_json, output_json):
 # Пример использования упрощенной версии
 if __name__ == "__main__":
     simple_align_coco(
-        reference_json=gt_pathes['drones_only_val'],
-        prediction_json=r'predictions\NORESIZE_drones_only!BEST_FOMO_56_crossEntropy_dronesOnly_104e_model_weights\annotations\predictions.json',
-        output_json=r'predictions\NORESIZE_drones_only!BEST_FOMO_56_crossEntropy_dronesOnly_104e_model_weights\annotations\predictions_aligned.json'
+        reference_json=gt_pathes['synth_drone_val'],
+        prediction_json=r'predictions/baseline/synth_drone_val.json',
+        output_json=r'predictions/baseline/synth_drone_val_alligned.json'
     )
