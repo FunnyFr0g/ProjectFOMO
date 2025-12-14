@@ -1052,7 +1052,7 @@ class VideoClassifier:
 def test_data_loading():
     """Тестовая функция для проверки загрузки данных"""
     config = Config()
-    config.data_dir = r"M:\object_crops"  # Укажите правильный путь
+    # config.data_dir = r"M:\object_crops"  # Укажите правильный путь
 
     try:
         # Попробуем загрузить датасет
@@ -1061,7 +1061,7 @@ def test_data_loading():
             root_dir=config.data_dir,
             transform=transform,
             sequence_length=config.sequence_length,
-            is_train=True
+            is_train=False
         )
 
         print(f"Dataset loaded successfully!")
@@ -1152,7 +1152,7 @@ def main():
 
     # Продолжаем с обучением
     config = Config()
-    config.data_dir = r"M:\object_crops"  # Укажите правильный путь
+    # config.data_dir = r"M:\object_crops"  # Укажите правильный путь
 
     print(f"\nStarting training with config:")
     print(f"  Device: {config.device}")
