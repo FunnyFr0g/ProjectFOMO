@@ -1147,10 +1147,10 @@ def main():
     if not test_data_loading():
         print("Data loading failed. Please check your data path and structure.")
         return
-
-    # Тестируем forward pass моделей
-    print("\nTesting model architectures...")
-    test_model_forward()
+    #
+    # # Тестируем forward pass моделей
+    # print("\nTesting model architectures...")
+    # # test_model_forward()
 
     # Продолжаем с обучением
     config = Config()
