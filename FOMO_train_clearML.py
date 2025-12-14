@@ -38,7 +38,6 @@ if USE_CLEARML:
             tags=['FOMO'],
             reuse_last_task_id=True
             )
-    task.add_requirements('opencv-python-headless')
     task.execute_remotely(queue_name='default', exit_process=True)
 
 # task.connect(params)

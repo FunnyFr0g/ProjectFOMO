@@ -2,7 +2,7 @@ import os
 import random
 import numpy as np
 from PIL import Image
-import cv2
+# import cv2
 from pathlib import Path
 from collections import defaultdict
 import logging
@@ -1018,8 +1018,8 @@ class VideoClassifier:
         for frame in frames:
             # Конвертируем в PIL если нужно
             if isinstance(frame, np.ndarray):
-                if frame.shape[2] == 3:  # BGR to RGB
-                    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                # if frame.shape[2] == 3:  # BGR to RGB
+                #     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 frame = Image.fromarray(frame)
 
             # Применяем трансформации
