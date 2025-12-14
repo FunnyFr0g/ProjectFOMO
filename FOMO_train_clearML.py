@@ -31,12 +31,14 @@ USE_CLEARML = 0
 if USE_CLEARML:
     Task.ignore_requirements('pywin32')
     Task.add_requirements("networkx","3.4.2")
+
     task = Task.init(
             project_name='SmallObjectDetection',
             task_name='FOMO_56_res_v0_FocalLoss_ReduceLROnPlateau train',
             tags=['FOMO'],
             reuse_last_task_id=True
             )
+    task.add_requirements('opencv-python-headless')
     task.execute_remotely(queue_name='default', exit_process=True)
 
 # task.connect(params)
