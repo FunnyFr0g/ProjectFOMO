@@ -1020,6 +1020,7 @@ class VideoClassifier:
             if isinstance(frame, np.ndarray):
                 # if frame.shape[2] == 3:  # BGR to RGB
                 #     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
                 frame = Image.fromarray(frame)
 
             # Применяем трансформации
