@@ -270,51 +270,29 @@ class VideoTransform:
 
 
 # ==================== 3D CNN MODELS ====================
+# ==================== 3D CNN MODELS ====================
 class Simple3DCNN(nn.Module):
-    """Простая 3D CNN архитектура"""
+    """Простая 3D CNN архитектура для коротких последовательностей"""
 
-    def __init__(self, num_classes=2, dropout_rate=0.4):
+    def __init__(self, num_classes=2, dropout_rate=0.4, sequence_length=Config.sequence_length):
         super().__init__()
+        self.sequence_length = sequence_length
 
-        # Первый блок сверток
-        self.conv1 = nn.Sequential(
-            nn.Conv3d(3, 16, kernel_size=(3, 3, 3), padding=1),
-            nn.BatchNorm3d(16),
-            nn.ReLU(inplace=True),
-            nn.MaxPool3d(kernel_size=(1, 2, 2))
-        )
-
-        # Второй блок сверток
-        self.conv2 = nn.Sequential(
-            nn.Conv3d(16, 32, kernel_size=(3, 3, 3), padding=1),
-            nn.BatchNorm3d(32),
-            nn.ReLU(inplace=True),
-            nn.MaxPool3d(kernel_size=(2, 2, 2))
-        )
-
-        # Третий блок сверток
-        self.conv3 = nn.Sequential(
-            nn.Conv3d(32, 64, kernel_size=(3, 3, 3), padding=1),
-            nn.BatchNorm3d(64),
-            nn.ReLU(inplace=True),
-            nn.MaxPool3d(kernel_size=(2, 2, 2))
-        )
-
-        # Четвертый блок сверток
-        self.conv4 = nn.Sequential(
-            nn.Conv3d(64, 128, kernel_size=(3, 3, 3), padding=1),
-            nn.BatchNorm3d(128),
-            nn.ReLU(inplace=True),
-            nn.MaxPool3d(kernel_size=(2, 2, 2))
-        )
-
-        # Глобальный average pooling
-        self.global_pool = nn.AdaptiveAvgPool3d(1)
+        # Определяем архитектуру в зависимости от длины последовательности
+        if sequence_length >= 16:
+            # Для длинных последовательностей используем больше слоев
+            self.conv_layers = self._create_long_sequence_arch()
+        elif sequence_length >= 8:
+            # Для средних последовательностей
+            self.conv_layers = self._create_medium_sequence_arch()
+        else:
+            # Для коротких последовательностей (5 кадров)
+            self.conv_layers = self._create_short_sequence_arch()
 
         # Классификатор
         self.classifier = nn.Sequential(
             nn.Dropout(dropout_rate),
-            nn.Linear(128, 64),
+            nn.Linear(self.output_features, 64),
             nn.ReLU(inplace=True),
             nn.Dropout(dropout_rate),
             nn.Linear(64, num_classes)
@@ -322,6 +300,105 @@ class Simple3DCNN(nn.Module):
 
         # Инициализация весов
         self._initialize_weights()
+
+    def _create_short_sequence_arch(self):
+        """Архитектура для коротких последовательностей (5 кадров)"""
+        layers = nn.Sequential(
+            # Первый блок - без pooling по времени
+            nn.Conv3d(3, 16, kernel_size=(1, 3, 3), padding=(0, 1, 1)),
+            nn.BatchNorm3d(16),
+            nn.ReLU(inplace=True),
+            nn.MaxPool3d(kernel_size=(1, 2, 2)),  # Только spatial pooling
+
+            # Второй блок - без pooling по времени
+            nn.Conv3d(16, 32, kernel_size=(1, 3, 3), padding=(0, 1, 1)),
+            nn.BatchNorm3d(32),
+            nn.ReLU(inplace=True),
+            nn.MaxPool3d(kernel_size=(1, 2, 2)),  # Только spatial pooling
+
+            # Третий блок - легкий pooling по времени если возможно
+            nn.Conv3d(32, 64, kernel_size=(3, 3, 3), padding=(1, 1, 1)),
+            nn.BatchNorm3d(64),
+            nn.ReLU(inplace=True),
+            nn.MaxPool3d(kernel_size=(1, 2, 2)),  # Только spatial pooling
+
+            # Четвертый блок
+            nn.Conv3d(64, 128, kernel_size=(3, 3, 3), padding=(1, 1, 1)),
+            nn.BatchNorm3d(128),
+            nn.ReLU(inplace=True),
+            nn.AdaptiveAvgPool3d((1, 1, 1))  # Адаптивный pooling
+        )
+
+        self.output_features = 128
+        return layers
+
+    def _create_medium_sequence_arch(self):
+        """Архитектура для средних последовательностей (8-15 кадров)"""
+        layers = nn.Sequential(
+            # Первый блок
+            nn.Conv3d(3, 16, kernel_size=(3, 3, 3), padding=(1, 1, 1)),
+            nn.BatchNorm3d(16),
+            nn.ReLU(inplace=True),
+            nn.MaxPool3d(kernel_size=(1, 2, 2)),
+
+            # Второй блок
+            nn.Conv3d(16, 32, kernel_size=(3, 3, 3), padding=(1, 1, 1)),
+            nn.BatchNorm3d(32),
+            nn.ReLU(inplace=True),
+            nn.MaxPool3d(kernel_size=(2, 2, 2)),
+
+            # Третий блок
+            nn.Conv3d(32, 64, kernel_size=(3, 3, 3), padding=(1, 1, 1)),
+            nn.BatchNorm3d(64),
+            nn.ReLU(inplace=True),
+            nn.MaxPool3d(kernel_size=(2, 2, 2)),
+
+            # Четвертый блок
+            nn.Conv3d(64, 128, kernel_size=(3, 3, 3), padding=(1, 1, 1)),
+            nn.BatchNorm3d(128),
+            nn.ReLU(inplace=True),
+            nn.AdaptiveAvgPool3d((1, 1, 1))
+        )
+
+        self.output_features = 128
+        return layers
+
+    def _create_long_sequence_arch(self):
+        """Архитектура для длинных последовательностей (16+ кадров)"""
+        layers = nn.Sequential(
+            # Первый блок
+            nn.Conv3d(3, 16, kernel_size=(3, 3, 3), padding=(1, 1, 1)),
+            nn.BatchNorm3d(16),
+            nn.ReLU(inplace=True),
+            nn.MaxPool3d(kernel_size=(1, 2, 2)),
+
+            # Второй блок
+            nn.Conv3d(16, 32, kernel_size=(3, 3, 3), padding=(1, 1, 1)),
+            nn.BatchNorm3d(32),
+            nn.ReLU(inplace=True),
+            nn.MaxPool3d(kernel_size=(2, 2, 2)),
+
+            # Третий блок
+            nn.Conv3d(32, 64, kernel_size=(3, 3, 3), padding=(1, 1, 1)),
+            nn.BatchNorm3d(64),
+            nn.ReLU(inplace=True),
+            nn.MaxPool3d(kernel_size=(2, 2, 2)),
+
+            # Четвертый блок
+            nn.Conv3d(64, 128, kernel_size=(3, 3, 3), padding=(1, 1, 1)),
+            nn.BatchNorm3d(128),
+            nn.ReLU(inplace=True),
+            nn.MaxPool3d(kernel_size=(2, 2, 2)),
+
+            # Пятый блок
+            nn.Conv3d(128, 256, kernel_size=(3, 3, 3), padding=(1, 1, 1)),
+            nn.BatchNorm3d(256),
+            nn.ReLU(inplace=True),
+            nn.AdaptiveAvgPool3d((1, 1, 1))
+        )
+
+        self.output_features = 256
+        return layers
 
     def _initialize_weights(self):
         for m in self.modules():
@@ -342,13 +419,9 @@ class Simple3DCNN(nn.Module):
         где T = sequence_length
         """
         # 3D свертки
-        x = self.conv1(x)
-        x = self.conv2(x)
-        x = self.conv3(x)
-        x = self.conv4(x)
+        x = self.conv_layers(x)
 
-        # Глобальный pooling
-        x = self.global_pool(x)
+        # Flatten
         x = x.view(x.size(0), -1)
 
         # Классификация
