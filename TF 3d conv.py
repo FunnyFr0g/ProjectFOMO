@@ -836,9 +836,23 @@ class VideoClassifierTrainer:
             val_loss, val_acc = self.validate(epoch)
             logger.info(f"Val   | Loss: {val_loss:.4f} | Acc: {val_acc:.4f}")
 
-            # Сохраняем чекпоинт каждые 5 эпох
-            if epoch % 5 == 0:
+            # Сохраняем чекпоинт каждые 10 эпох
+            if epoch % 10 == 0:
                 self.save_model(f"checkpoint_epoch_{epoch}.pth")
+
+            if USE_CLEARML:
+                task.get_logger().report_scalar(
+                    title="Loss", series="Train", value=train_loss, iteration=epoch
+                )
+                task.get_logger().report_scalar(
+                    title="Accuracy", series="Train", value=train_acc, iteration=epoch
+                )
+                task.get_logger().report_scalar(
+                    title="Loss", series="Val", value=val_loss, iteration=epoch
+                )
+                task.get_logger().report_scalar(
+                    title="Accuracy", series="Val", value=val_acc, iteration=epoch
+                )
 
         # Сохраняем финальную модель
         self.save_model("final_model.pth")
@@ -1150,24 +1164,24 @@ def main():
 
     try:
         # Выберите модель: 'simple', 'resnet3d', 'r3d_18'
-        model_type = 'r3d_18'  # Начинайте с простой модели
+        model_type = 'simple'  # Начинайте с простой модели
 
         # Инициализация и обучение
         trainer = VideoClassifierTrainer(config, model_type)
         trainer.train()
 
         # Тестирование классификатора
-        print("\nTesting classifier...")
-        classifier = VideoClassifier("weights/3d_cnn_classifier/best_model.pth")
-
-        # Создаем тестовую последовательность
-        test_frames = [np.random.rand(100, 100, 3).astype(np.uint8) for _ in range(config.sequence_length)]
-        result = classifier(test_frames)
-
-        print(f"Classification result:")
-        print(f"  Class: {result['class_names'][result['class']]} ({result['class']})")
-        print(f"  Confidence: {result['confidence']:.4f}")
-        print(f"  Probabilities: Bird={result['probabilities'][0]:.4f}, Drone={result['probabilities'][1]:.4f}")
+        # print("\nTesting classifier...")
+        # classifier = VideoClassifier("weights/3d_cnn_classifier/best_model.pth")
+        #
+        # # Создаем тестовую последовательность
+        # test_frames = [np.random.rand(100, 100, 3).astype(np.uint8) for _ in range(config.sequence_length)]
+        # result = classifier(test_frames)
+        #
+        # print(f"Classification result:")
+        # print(f"  Class: {result['class_names'][result['class']]} ({result['class']})")
+        # print(f"  Confidence: {result['confidence']:.4f}")
+        # print(f"  Probabilities: Bird={result['probabilities'][0]:.4f}, Drone={result['probabilities'][1]:.4f}")
 
     except Exception as e:
         print(f"Training failed: {e}")
