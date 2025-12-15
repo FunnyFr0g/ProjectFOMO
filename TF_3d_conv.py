@@ -20,18 +20,19 @@ import seaborn as sns
 from torch.cuda.amp import GradScaler, autocast
 import warnings
 
-from clearml import Task, Logger, Dataset as CML_Dataset
+
 
 
 warnings.filterwarnings('ignore')
 
-USE_CLEARML = True
+USE_CLEARML = False
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-if USE_CLEARML:
+if USE_CLEARML and __name__=="__main__":
+    from clearml import Task, Logger, Dataset as CML_Dataset
     Task.ignore_requirements('pywin32')
     Task.add_requirements("networkx","3.4.2")
     task = Task.init(
@@ -1061,8 +1062,10 @@ class VideoClassifier:
         self.transform = VideoTransform.get_val_transforms()
 
         # Конфигурация
-        self.sequence_length = checkpoint['config'].get('sequence_length', 16)
-        self.img_size = checkpoint['config'].get('img_size', (64, 64))
+        # self.sequence_length = checkpoint['config'].get('sequence_length', 16)
+        # self.img_size = checkpoint['config'].get('img_size', (64, 64))
+        self.sequence_length = 0
+        self.img_size = (32, 32)
 
         logger.info(f"Model loaded: {model_type}")
         logger.info(f"Sequence length: {self.sequence_length}")
@@ -1239,7 +1242,7 @@ def main():
 
     try:
         # Выберите модель: 'simple', 'resnet3d', 'r3d_18'
-        model_type = 'simple'  # Начинайте с простой модели
+        model_type = 'resnet3d'  # Начинайте с простой модели
 
         # Инициализация и обучение
         trainer = VideoClassifierTrainer(config, model_type)
